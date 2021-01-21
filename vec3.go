@@ -35,8 +35,12 @@ func (v vec3) Sub(v2 vec3) vec3 {
 	return vec3{v[0] - v2[0], v[1] - v2[1], v[2] - v2[2]}
 }
 
-func (v vec3) Mul(c float64) vec3 {
-	return vec3{v[0] * c, v[1] * c}
+func (v vec3) Mult(c float64) vec3 {
+	return vec3{v[0] * c, v[1] * c, v[2] * c}
+}
+
+func (v vec3) Div(c float64) vec3 {
+	return v.Mult(1.0 / c)
 }
 
 func (v vec3) Length() float64 {
@@ -45,4 +49,21 @@ func (v vec3) Length() float64 {
 
 func (v vec3) LengthSquared() float64 {
 	return v[0]*v[0] + v[1]*v[1] + v[2]*v[2]
+}
+
+func (v vec3) Dot(v2 vec3) float64 {
+	return v[0]*v2[0] + v[1]*v2[1] + v[2]*v2[2]
+}
+
+func (v vec3) Normalize() vec3 {
+	return v.Div(v.Length())
+}
+
+func (v vec3) Cross(v2 vec3) vec3 {
+	return vec3{v[1]*v2[2] - v[2]*v2[1], v[2]*v2[0] - v[0]*v2[2], v[0]*v2[1] - v[1]*v2[0]}
+}
+
+// Lerp (1−t)⋅startValue+t⋅endValue
+func Lerp(start vec3, end vec3, t float64) vec3 {
+	return start.Mult(1.0 - t).Add(end.Mult(t))
 }

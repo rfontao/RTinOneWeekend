@@ -1,9 +1,7 @@
 package main
 
 import (
-	"fmt"
 	"image"
-	"image/color"
 	"image/png"
 	"os"
 )
@@ -11,8 +9,21 @@ import (
 func main() {
 
 	//Image
-	const imageHeight int = 256
-	const imageWidth int = 256
+	const aspectRatio = 16.0 / 9.0
+	const imageWidth int = 400
+	const imageHeight int = int(float64(imageWidth) / aspectRatio)
+
+	//Camera
+
+	var viewportHeight = 2.0
+	var viewportWidth = aspectRatio * viewportHeight
+	var focalLength = 1.0
+
+	var origin = point3{0, 0, 0}
+	var horizontal = vec3{viewportWidth, 0, 0}
+	var vertical = vec3{0, viewportHeight, 0}
+	var lowerLeftCorner = origin.Sub(horizontal.Div(2)).Sub(vertical.Div(2)).Sub(vec3{0, 0, focalLength})
+	lowerLeftCorner.Print()
 
 	//Render
 
@@ -21,27 +32,28 @@ func main() {
 
 	img := image.NewRGBA(image.Rectangle{upLeft, lowRight})
 
-	var rgbMax = 255.0
 	// Set color for each pixel.
 	for y := 0; y < imageHeight; y++ {
-		fmt.Printf("%d/%d lines\n", y, imageHeight-1)
+		// fmt.Printf("%d/%d lines\n", y, imageHeight-1)
 		for x := 0; x < imageWidth; x++ {
 
-			var r = uint8((float64(x) / float64(imageHeight)) * rgbMax)
-			var g = uint8((float64(imageHeight-y) / float64(imageWidth)) * rgbMax)
-			var b = uint8(0.25 * rgbMax)
+			//Horizontal ratio?
+			var u float64 = float64(x) / float64(imageWidth-1)
+			//Vertical ratio?
+			var v float64 = float64(y) / float64(imageHeight-1)
 
+			var currentRay = ray{origin, lowerLeftCorner.Add(horizontal.Mult(u)).Add(vertical.Mult(v)).Sub(origin)}
 			// Colors are defined by Red, Green, Blue, Alpha uint8 values.
-			img.Set(x, y, color.RGBA{r, g, b, 0xff})
-			// img.Set(x, y, color.RGBA{uint8(y), 255, 255, 0xff})
+			img.Set(x, imageHeight-y, color3ToRGBA(currentRay.RayColor()))
 		}
 	}
 
 	// Encode as PNG.
-	f, _ := os.Create("image.png")
+	f, _ := os.Create("a.png")
 	png.Encode(f, img)
 
-	var a vec3 = vec3{1, 2, 3}
+	// var a ray = ray{point3{0, 0, 0}, vec3{1, 0, 3}}
 
-	a.Print()
+	// // fmt.Print(a.Dot(b))
+	// a.At(2).Print()
 }
