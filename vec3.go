@@ -10,7 +10,7 @@ type color3 = vec3
 type point3 = vec3
 
 func (v vec3) Print() {
-	fmt.Printf("vec3[% 0.3f, % 0.3f, % 0.3f]", v[0], v[1], v[2])
+	fmt.Printf("vec3[% 0.3f, % 0.3f, % 0.3f]\n", v[0], v[1], v[2])
 }
 
 //Access functions
