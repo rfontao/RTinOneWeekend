@@ -105,6 +105,16 @@ func randomInHemisphere(normal vec3) vec3 {
 
 }
 
+func randomInUnitDisk() vec3 {
+	for {
+		p := vec3{randomDoubleRange(-1, 1), randomDoubleRange(-1, 1), 0}
+		if p.LengthSquared() >= 1 {
+			continue
+		}
+		return p
+	}
+}
+
 func (v vec3) nearZero() bool {
 	const s = 1e-18
 	return (math.Abs(v[0]) < s) && (math.Abs(v[1]) < s) && (math.Abs(v[2]) < s)
@@ -112,4 +122,12 @@ func (v vec3) nearZero() bool {
 
 func reflect(v vec3, n vec3) vec3 {
 	return v.Sub(n.Mult(v.Dot(n) * 2.0))
+}
+
+func refract(uv vec3, n vec3, etaRatio float64) vec3 {
+	cosTheta := math.Min(uv.Mult(-1).Dot(n), 1.0)
+	rOutPerp := (uv.Add(n.Mult(cosTheta))).Mult(etaRatio)
+	rOutParallel := n.Mult(-math.Sqrt(math.Abs(1 - rOutPerp.LengthSquared())))
+
+	return rOutParallel.Add(rOutPerp)
 }

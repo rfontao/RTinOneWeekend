@@ -11,30 +11,23 @@ import (
 func main() {
 
 	//Image
-	const aspectRatio = 16.0 / 9.0
-	const imageWidth int = 400
+	const aspectRatio = 3.0 / 2.0
+	const imageWidth int = 1200
 	const imageHeight int = int(float64(imageWidth) / aspectRatio)
 	const samplesPerPixel int = 100
 	const maxDepth int = 50
 
 	//World
-	var world hittableList
-
-	materialGround := lambertian{color3{0.8, 0.8, 0.0}}
-	materialCenter := lambertian{color3{0.7, 0.3, 0.3}}
-	materialLeft := metal{color3{0.8, 0.8, 0.8}, 0.3}
-	materialRight := metal{color3{0.8, 0.6, 0.2}, 1.0}
-
-	//Somehow order matters check later
-	world.Add(sphere{point3{0, 0, -1}, 0.5, materialCenter})
-	world.Add(sphere{point3{-1, 0, -1}, 0.5, materialLeft})
-	world.Add(sphere{point3{1, 0, -1}, 0.5, materialRight})
-	world.Add(sphere{point3{0, -100.5, -1}, 100.0, materialGround})
-
-	fmt.Print(world)
+	var world hittableList = randomScene()
 
 	//Camera
-	c := initCamera()
+	lookFrom := point3{13, 2, 3}
+	lookAt := point3{0, 0, 0}
+	up := vec3{0, 1, 0}
+	distToFocus := 10.0
+	aperture := 0.1
+
+	c := initCamera(lookFrom, lookAt, up, 20, aspectRatio, aperture, distToFocus)
 
 	//Render
 
