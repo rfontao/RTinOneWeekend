@@ -9,6 +9,7 @@ type hitRecord struct {
 	normal    vec3
 	t         float64
 	frontFace bool
+	mat       material
 }
 
 type hittable interface {
@@ -20,13 +21,14 @@ func (rec *hitRecord) setFaceNormal(r ray, outwardNormal vec3) {
 	if rec.frontFace == true {
 		rec.normal = outwardNormal
 	} else {
-		rec.normal = outwardNormal.Mult(-1)
+		rec.normal = outwardNormal.Mult(-1.0)
 	}
 }
 
 type sphere struct {
 	center point3
 	radius float64
+	mat    material
 }
 
 func (s sphere) hit(r ray, tMin float64, tMax float64) (rec hitRecord, hits bool) {
@@ -64,6 +66,7 @@ func (s sphere) hit(r ray, tMin float64, tMax float64) (rec hitRecord, hits bool
 	rec.p = r.At(rec.t)
 	outwardNormal := rec.p.Sub(s.center).Div(s.radius)
 	rec.setFaceNormal(r, outwardNormal)
+	rec.mat = s.mat
 
 	return rec, true
 }

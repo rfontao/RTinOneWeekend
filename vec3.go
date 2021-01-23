@@ -39,6 +39,10 @@ func (v vec3) Mult(c float64) vec3 {
 	return vec3{v[0] * c, v[1] * c, v[2] * c}
 }
 
+func (v vec3) MultEach(v2 vec3) vec3 {
+	return vec3{v[0] * v2[0], v[1] * v2[0], v[2] * v2[0]}
+}
+
 func (v vec3) Div(c float64) vec3 {
 	return v.Mult(1.0 / c)
 }
@@ -99,4 +103,13 @@ func randomInHemisphere(normal vec3) vec3 {
 	}
 	return inUnitSphere.Mult(-1)
 
+}
+
+func (v vec3) nearZero() bool {
+	const s = 1e-18
+	return (math.Abs(v[0]) < s) && (math.Abs(v[1]) < s) && (math.Abs(v[2]) < s)
+}
+
+func reflect(v vec3, n vec3) vec3 {
+	return v.Sub(n.Mult(v.Dot(n) * 2.0))
 }

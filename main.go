@@ -17,8 +17,20 @@ func main() {
 	const samplesPerPixel int = 100
 	const maxDepth int = 50
 
-	//Camera
+	//World
+	var world hittableList
 
+	materialGround := lambertian{color3{0.8, 0.8, 0.0}}
+	materialCenter := lambertian{color3{0.7, 0.3, 0.3}}
+	materialLeft := metal{color3{0.8, 0.8, 0.8}}
+	materialRight := metal{color3{0.8, 0.6, 0.2}}
+
+	world.Add(sphere{point3{0, -100.5, -1}, 100.0, materialGround})
+	world.Add(sphere{point3{0, 0, -1}, 0.5, materialCenter})
+	world.Add(sphere{point3{-1, 0, -1}, 0.5, materialLeft})
+	world.Add(sphere{point3{1, 0, -1}, 0.5, materialRight})
+
+	//Camera
 	c := initCamera()
 
 	//Render
@@ -27,11 +39,6 @@ func main() {
 	lowRight := image.Point{imageWidth - 1, imageHeight - 1}
 
 	img := image.NewRGBA(image.Rectangle{upLeft, lowRight})
-
-	var world hittableList
-
-	world.Add(sphere{point3{0, 0, -1}, 0.5})
-	world.Add(sphere{point3{0, -100.5, -1}, 100})
 
 	// Set color for each pixel.
 	for y := imageHeight - 1; y >= 0; y-- {

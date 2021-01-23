@@ -19,13 +19,14 @@ func (r ray) RayColor(world hittable, maxDepth int) color3 {
 
 	rec, hit := world.hit(r, 0.001, infinity)
 	if hit == true {
-		// target := rec.p.Add(rec.normal).Add(randomInUnitSphere())
-		target := rec.p.Add(randomInHemisphere(rec.normal))
 
-		res := ray{rec.p, target.Sub(rec.p)}.RayColor(world, maxDepth-1).Mult(0.5)
-		// res.Print()
-		return res
+		scattered, attenuation, scatter := rec.mat.scatter(r, rec)
+		if scatter {
+			return attenuation.MultEach(scattered.RayColor(world, maxDepth-1))
+		}
+		return color3{0, 0, 0}
 	}
+
 	rec.t = 0.5 * (r.direction.Normalize().Y() + 1.0)
 	return Lerp(color3{1.0, 1.0, 1.0}, color3{0.5, 0.7, 1.0}, rec.t)
 }
