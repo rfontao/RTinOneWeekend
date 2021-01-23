@@ -22,13 +22,16 @@ func main() {
 
 	materialGround := lambertian{color3{0.8, 0.8, 0.0}}
 	materialCenter := lambertian{color3{0.7, 0.3, 0.3}}
-	materialLeft := metal{color3{0.8, 0.8, 0.8}}
-	materialRight := metal{color3{0.8, 0.6, 0.2}}
+	materialLeft := metal{color3{0.8, 0.8, 0.8}, 0.3}
+	materialRight := metal{color3{0.8, 0.6, 0.2}, 1.0}
 
-	world.Add(sphere{point3{0, -100.5, -1}, 100.0, materialGround})
+	//Somehow order matters check later
 	world.Add(sphere{point3{0, 0, -1}, 0.5, materialCenter})
 	world.Add(sphere{point3{-1, 0, -1}, 0.5, materialLeft})
 	world.Add(sphere{point3{1, 0, -1}, 0.5, materialRight})
+	world.Add(sphere{point3{0, -100.5, -1}, 100.0, materialGround})
+
+	fmt.Print(world)
 
 	//Camera
 	c := initCamera()

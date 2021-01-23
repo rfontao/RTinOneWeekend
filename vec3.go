@@ -40,7 +40,7 @@ func (v vec3) Mult(c float64) vec3 {
 }
 
 func (v vec3) MultEach(v2 vec3) vec3 {
-	return vec3{v[0] * v2[0], v[1] * v2[0], v[2] * v2[0]}
+	return vec3{v[0] * v2[0], v[1] * v2[1], v[2] * v2[2]}
 }
 
 func (v vec3) Div(c float64) vec3 {

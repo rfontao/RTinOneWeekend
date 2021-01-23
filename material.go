@@ -23,13 +23,14 @@ func (lamb lambertian) scatter(rayIn ray, rec hitRecord) (scattered ray, attenua
 
 type metal struct {
 	albedo color3
+	fuzz   float64 //Radius of sphere
 }
 
 func (m metal) scatter(rayIn ray, rec hitRecord) (scattered ray, attenuation color3, scatter bool) {
 
 	reflected := reflect(rayIn.direction.Normalize(), rec.normal)
 
-	scattered = ray{rec.p, reflected}
+	scattered = ray{rec.p, reflected.Add(randomInUnitSphere().Mult(m.fuzz))}
 	attenuation = m.albedo
 	return scattered, attenuation, scattered.direction.Dot(rec.normal) > 0
 }
