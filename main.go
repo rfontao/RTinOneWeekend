@@ -6,30 +6,33 @@ import (
 	"image/png"
 	"math"
 	"os"
+	"time"
 )
 
 func main() {
 
 	//Image
-	const aspectRatio = 3.0 / 2.0
-	const imageWidth int = 1200
+	const aspectRatio = 16.0 / 9.0
+	const imageWidth int = 400
 	const imageHeight int = int(float64(imageWidth) / aspectRatio)
 	const samplesPerPixel int = 100
 	const maxDepth int = 50
 
-	//World
-	var world hittableList = randomScene()
+	// World/Camera
+	world := threeBallScene()
 
 	//Camera
-	lookFrom := point3{13, 2, 3}
-	lookAt := point3{0, 0, 0}
+	lookFrom := point3{-2, 2, 1}
+	lookAt := point3{0, 0, -1}
 	up := vec3{0, 1, 0}
-	distToFocus := 10.0
+	distToFocus := 5.0
 	aperture := 0.1
 
 	c := initCamera(lookFrom, lookAt, up, 20, aspectRatio, aperture, distToFocus)
 
 	//Render
+
+	t0 := time.Now()
 
 	upLeft := image.Point{0, 0}
 	lowRight := image.Point{imageWidth - 1, imageHeight - 1}
@@ -60,10 +63,8 @@ func main() {
 	f, _ := os.Create("a.png")
 	png.Encode(f, img)
 
-	// var a ray = ray{point3{0, 0, 0}, vec3{1, 0, 3}}
-
-	// // fmt.Print(a.Dot(b))
-	// a.At(2).Print()
+	t1 := time.Now()
+	fmt.Printf("The call took %v to run.\n", t1.Sub(t0))
 }
 
 /*
