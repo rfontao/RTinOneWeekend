@@ -20,12 +20,11 @@ func randomDoubleRange(min float64, max float64) float64 {
 }
 
 func clamp(x float64, min float64, max float64) float64 {
-	switch {
-	case x < min:
+	if x < min {
 		return min
-	case x > max:
+	}
+	if x > max {
 		return max
 	}
-
 	return x
 }

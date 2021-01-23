@@ -67,7 +67,7 @@ func (list hittableList) hit(r ray, tMin float64, tMax float64) (rec hitRecord, 
 	closestSoFar := tMax
 
 	for _, obj := range list.objects {
-		if hitRec, hit := obj.hit(r, tMin, closestSoFar); hit {
+		if hitRec, hit := obj.hit(r, tMin, closestSoFar); hit == true {
 			hitAnything = true
 			closestSoFar = rec.t
 			rec = hitRec

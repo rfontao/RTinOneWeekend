@@ -67,3 +67,21 @@ func (v vec3) Cross(v2 vec3) vec3 {
 func Lerp(start vec3, end vec3, t float64) vec3 {
 	return start.Mult(1.0 - t).Add(end.Mult(t))
 }
+
+func randomVec3() vec3 {
+	return vec3{randomDouble(), randomDouble(), randomDouble()}
+}
+
+func randomRangeVec3(min float64, max float64) vec3 {
+	return vec3{randomDoubleRange(min, max), randomDoubleRange(min, max), randomDoubleRange(min, max)}
+}
+
+func randomInUnitSphere() vec3 {
+	for {
+		p := randomRangeVec3(-1, 1)
+		if p.LengthSquared() >= 1 {
+			continue
+		}
+		return p
+	}
+}
