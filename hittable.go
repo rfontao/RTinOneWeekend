@@ -1,6 +1,8 @@
 package main
 
-import "math"
+import (
+	"math"
+)
 
 type hitRecord struct {
 	p         point3
@@ -15,10 +17,11 @@ type hittable interface {
 
 func (rec *hitRecord) setFaceNormal(r ray, outwardNormal vec3) {
 	rec.frontFace = r.direction.Dot(outwardNormal) < 0
-	if rec.frontFace {
+	if rec.frontFace == true {
 		rec.normal = outwardNormal
+	} else {
+		rec.normal = outwardNormal.Mult(-1)
 	}
-	rec.normal = outwardNormal.Mult(-1)
 }
 
 type sphere struct {
@@ -27,6 +30,9 @@ type sphere struct {
 }
 
 func (s sphere) hit(r ray, tMin float64, tMax float64) (rec hitRecord, hits bool) {
+
+	// const tolerance float64 = 0.01
+
 	rToCenter := r.origin.Sub(s.center) //A - C
 	a := r.direction.LengthSquared()    // r dir DOT r dir
 	h := rToCenter.Dot(r.direction)
@@ -48,6 +54,11 @@ func (s sphere) hit(r ray, tMin float64, tMax float64) (rec hitRecord, hits bool
 			return rec, false
 		}
 	}
+
+	//Used to make the rays not colide with t = 0
+	// if math.Abs(root) < tolerance {
+	// 	return rec, false
+	// }
 
 	rec.t = root
 	rec.p = r.At(rec.t)

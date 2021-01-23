@@ -15,7 +15,7 @@ func main() {
 	const imageWidth int = 400
 	const imageHeight int = int(float64(imageWidth) / aspectRatio)
 	const samplesPerPixel int = 100
-	const maxDepth int = 100
+	const maxDepth int = 50
 
 	//Camera
 
@@ -31,14 +31,14 @@ func main() {
 	var world hittableList
 
 	world.Add(sphere{point3{0, 0, -1}, 0.5})
-	// world.Add(sphere{point3{0, -100.5, -1}, 100})
+	world.Add(sphere{point3{0, -100.5, -1}, 100})
 
 	// Set color for each pixel.
 	for y := imageHeight - 1; y >= 0; y-- {
 		fmt.Printf("%d/%d lines\n", imageHeight-y, imageHeight-1)
 		for x := 0; x < imageWidth; x++ {
-			pixelColor := color3{0, 0, 0}
 
+			pixelColor := color3{0, 0, 0}
 			for s := 0; s < samplesPerPixel; s++ {
 				//Horizontal ratio?
 				u := (float64(x) + randomDouble()) / float64(imageWidth-1)
@@ -46,10 +46,6 @@ func main() {
 				v := (float64(y) + randomDouble()) / float64(imageHeight-1)
 				currentRay := c.getRay(u, v)
 				rayColor := currentRay.RayColor(world, maxDepth)
-				if y == imageHeight/2 && x == imageWidth/2 {
-					rayColor.Print()
-				}
-
 				pixelColor = pixelColor.Add(rayColor)
 			}
 			// Colors are defined by Red, Green, Blue, Alpha uint8 values.

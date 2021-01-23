@@ -2,6 +2,7 @@ package main
 
 import (
 	"image/color"
+	"math"
 )
 
 func color3ToRGBA(c color3, samplesPerPixel int) color.RGBA {
@@ -12,9 +13,9 @@ func color3ToRGBA(c color3, samplesPerPixel int) color.RGBA {
 	b := c.Z()
 
 	scale := 1.0 / float64(samplesPerPixel)
-	r *= scale
-	g *= scale
-	b *= scale
+	r = math.Sqrt(scale * r)
+	g = math.Sqrt(scale * g)
+	b = math.Sqrt(scale * b)
 
 	return color.RGBA{uint8(256.0 * clamp(r, 0.0, 0.999)),
 		uint8(256.0 * clamp(g, 0.0, 0.999)),

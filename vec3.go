@@ -85,3 +85,18 @@ func randomInUnitSphere() vec3 {
 		return p
 	}
 }
+
+//True lambertian reflection
+func randomUnitVector() vec3 {
+	return randomInUnitSphere().Normalize()
+}
+
+func randomInHemisphere(normal vec3) vec3 {
+	inUnitSphere := randomInUnitSphere()
+
+	if inUnitSphere.Dot(normal) > 0.0 {
+		return inUnitSphere
+	}
+	return inUnitSphere.Mult(-1)
+
+}
