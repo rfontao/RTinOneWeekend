@@ -3,14 +3,14 @@ package main
 import "math"
 
 type material interface {
-	scatter(rayIn ray, rec hitRecord) (scattered ray, attenuation color3, scatter bool)
+	scatter(rayIn *ray, rec *hitRecord) (scattered *ray, attenuation *color3, scatter bool)
 }
 
 type lambertian struct {
 	albedo color3
 }
 
-func (lamb lambertian) scatter(rayIn ray, rec hitRecord) (scattered ray, attenuation color3, scatter bool) {
+func (lamb lambertian) scatter(rayIn *ray, rec *hitRecord) (scattered *ray, attenuation *color3, scatter bool) {
 
 	scatterDirection := rec.normal.Add(randomUnitVector())
 	// Catch degenerate scatter direction
@@ -18,8 +18,8 @@ func (lamb lambertian) scatter(rayIn ray, rec hitRecord) (scattered ray, attenua
 		scatterDirection = rec.normal
 	}
 
-	scattered = ray{rec.p, scatterDirection}
-	attenuation = lamb.albedo
+	scattered = &ray{rec.p, scatterDirection}
+	attenuation = &lamb.albedo
 	return scattered, attenuation, true
 }
 
@@ -28,12 +28,12 @@ type metal struct {
 	fuzz   float64 //Radius of sphere
 }
 
-func (m metal) scatter(rayIn ray, rec hitRecord) (scattered ray, attenuation color3, scatter bool) {
+func (m metal) scatter(rayIn *ray, rec *hitRecord) (scattered *ray, attenuation *color3, scatter bool) {
 
 	reflected := reflect(rayIn.direction.Normalize(), rec.normal)
 
-	scattered = ray{rec.p, reflected.Add(randomInUnitSphere().Mult(m.fuzz))}
-	attenuation = m.albedo
+	scattered = &ray{rec.p, reflected.Add(randomInUnitSphere().Mult(m.fuzz))}
+	attenuation = &m.albedo
 	return scattered, attenuation, scattered.direction.Dot(rec.normal) > 0
 }
 
@@ -41,9 +41,8 @@ type dielectric struct {
 	ir float64 //Index of refraction
 }
 
-func (m dielectric) scatter(rayIn ray, rec hitRecord) (scattered ray, attenuation color3, scatter bool) {
+func (m dielectric) scatter(rayIn *ray, rec *hitRecord) (scattered *ray, attenuation *color3, scatter bool) {
 
-	attenuation = color3{1, 1, 1}
 	var refractionRatio float64
 	if rec.frontFace {
 		refractionRatio = 1.0 / m.ir
@@ -65,7 +64,8 @@ func (m dielectric) scatter(rayIn ray, rec hitRecord) (scattered ray, attenuatio
 
 	}
 
-	scattered = ray{rec.p, direction}
+	attenuation = &color3{1, 1, 1}
+	scattered = &ray{rec.p, direction}
 
 	return scattered, attenuation, true
 }

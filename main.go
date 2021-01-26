@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"image"
 	"image/png"
-	"math"
 	"os"
 	"time"
 )
@@ -41,7 +40,7 @@ func main() {
 
 	// Set color for each pixel.
 	for y := imageHeight - 1; y >= 0; y-- {
-		fmt.Printf("%d/%d lines\n", imageHeight-y, imageHeight-1)
+		fmt.Printf("%d/%d lines\n", imageHeight-y, imageHeight)
 		for x := 0; x < imageWidth; x++ {
 
 			pixelColor := color3{0, 0, 0}
@@ -66,40 +65,3 @@ func main() {
 	t1 := time.Now()
 	fmt.Printf("The call took %v to run.\n", t1.Sub(t0))
 }
-
-/*
-HitSphere checks if a ray r hits a sphere with center center and radius r
-If so return t
-
-t2b⋅b+2tb⋅(A−C)+(A−C)⋅(A−C)−r2=0 => a = b.b; b =
-A = ray origin
-b = ray direction
-
-*/
-func HitSphere(center point3, radius float64, r ray) float64 {
-	rToCenter := r.origin.Sub(center) //A - C
-	a := r.direction.LengthSquared()  // r dir DOT r dir
-	h := rToCenter.Dot(r.direction)
-	c := rToCenter.LengthSquared() - math.Pow(radius, 2)
-
-	discriminant := math.Pow(h, 2) - a*c
-
-	if discriminant < 0 {
-		return -1.0
-	}
-	return (-h - math.Sqrt(discriminant)/a)
-}
-
-// func HitSphere(center point3, radius float64, r ray) float64 {
-// 	rToCenter := r.origin.Sub(center) //A - C
-// 	a := r.direction.Dot(r.direction)
-// 	b := rToCenter.Dot(r.direction) * 2.0
-// 	c := rToCenter.Dot(rToCenter) - math.Pow(radius, 2)
-
-// 	discriminat := math.Pow(b, 2) - 4.0*a*c
-
-// 	if discriminat < 0 {
-// 		return -1.0
-// 	}
-// 	return (-b - math.Sqrt(discriminat)/(2.0*a))
-// }

@@ -32,10 +32,10 @@ func initCamera(lookFrom point3, lookAt point3, up vec3, vfov float64, aspectRat
 	return c
 }
 
-func (c camera) getRay(s float64, t float64) ray {
+func (c camera) getRay(s float64, t float64) *ray {
 
 	rd := randomInUnitDisk().Mult(c.lensRadius)
 	offset := (c.u.Mult(rd.X())).Add(c.v.Mult(rd.Y()))
 
-	return ray{c.origin.Add(offset), c.lowerLeftCorner.Add(c.horizontal.Mult(s)).Add(c.vertical.Mult(t)).Sub(c.origin).Sub(offset)}
+	return &ray{c.origin.Add(offset), c.lowerLeftCorner.Add(c.horizontal.Mult(s)).Add(c.vertical.Mult(t)).Sub(c.origin).Sub(offset)}
 }

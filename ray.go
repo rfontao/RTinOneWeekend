@@ -5,12 +5,12 @@ type ray struct {
 	direction vec3
 }
 
-func (r ray) At(t float64) point3 {
+func (r *ray) At(t float64) point3 {
 	return r.origin.Add(r.direction.Mult(t))
 }
 
 //"Background" color (colors can be changed)
-func (r ray) RayColor(world hittable, maxDepth int) color3 {
+func (r *ray) RayColor(world hittable, maxDepth int) color3 {
 	if maxDepth <= 0 {
 		//No more light gathered
 		return color3{0, 0, 0}
