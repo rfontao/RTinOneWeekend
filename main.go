@@ -14,8 +14,8 @@ func main() {
 	const aspectRatio = 3.0 / 2.0
 	const imageWidth int = 1200
 	const imageHeight int = int(float64(imageWidth) / aspectRatio)
-	const samplesPerPixel int = 100
-	const maxDepth int = 50
+	const samplesPerPixel int = 15
+	const maxDepth int = 9
 
 	//World
 	var world hittableList = randomScene()
