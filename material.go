@@ -1,18 +1,21 @@
 package main
 
-import "math"
+import (
+	"math"
+	"math/rand"
+)
 
 type material interface {
-	scatter(rayIn *ray, rec *hitRecord) (scattered *ray, attenuation *color3, scatter bool)
+	scatter(rayIn *ray, rec *hitRecord, rnd *rand.Rand) (scattered *ray, attenuation *color3, scatter bool)
 }
 
 type lambertian struct {
 	albedo color3
 }
 
-func (lamb lambertian) scatter(rayIn *ray, rec *hitRecord) (scattered *ray, attenuation *color3, scatter bool) {
+func (lamb lambertian) scatter(rayIn *ray, rec *hitRecord, rnd *rand.Rand) (scattered *ray, attenuation *color3, scatter bool) {
 
-	scatterDirection := rec.normal.Add(randomUnitVector())
+	scatterDirection := rec.normal.Add(randomUnitVector(rnd))
 	// Catch degenerate scatter direction
 	if scatterDirection.nearZero() {
 		scatterDirection = rec.normal
@@ -28,11 +31,11 @@ type metal struct {
 	fuzz   float64 //Radius of sphere
 }
 
-func (m metal) scatter(rayIn *ray, rec *hitRecord) (scattered *ray, attenuation *color3, scatter bool) {
+func (m metal) scatter(rayIn *ray, rec *hitRecord, rnd *rand.Rand) (scattered *ray, attenuation *color3, scatter bool) {
 
 	reflected := reflect(rayIn.direction.Normalize(), rec.normal)
 
-	scattered = &ray{rec.p, reflected.Add(randomInUnitSphere().Mult(m.fuzz))}
+	scattered = &ray{rec.p, reflected.Add(randomInUnitSphere(rnd).Mult(m.fuzz))}
 	attenuation = &m.albedo
 	return scattered, attenuation, scattered.direction.Dot(rec.normal) > 0
 }
@@ -41,7 +44,7 @@ type dielectric struct {
 	ir float64 //Index of refraction
 }
 
-func (m dielectric) scatter(rayIn *ray, rec *hitRecord) (scattered *ray, attenuation *color3, scatter bool) {
+func (m dielectric) scatter(rayIn *ray, rec *hitRecord, rnd *rand.Rand) (scattered *ray, attenuation *color3, scatter bool) {
 
 	var refractionRatio float64
 	if rec.frontFace {
@@ -57,7 +60,7 @@ func (m dielectric) scatter(rayIn *ray, rec *hitRecord) (scattered *ray, attenua
 	cannotRefract := refractionRatio*sinTheta > 1.0
 
 	var direction vec3
-	if cannotRefract || reflectance(cosTheta, refractionRatio) > randomDouble() {
+	if cannotRefract || reflectance(cosTheta, refractionRatio) > randomDouble(rnd) {
 		direction = reflect(unitDirection, rec.normal)
 	} else {
 		direction = refract(unitDirection, rec.normal, refractionRatio)

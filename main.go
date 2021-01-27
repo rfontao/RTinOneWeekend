@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image"
 	"image/png"
+	"math/rand"
 	"os"
 	"time"
 )
@@ -42,16 +43,13 @@ func main() {
 	for y := imageHeight - 1; y >= 0; y-- {
 		fmt.Printf("%d/%d lines\n", imageHeight-y, imageHeight)
 		for x := 0; x < imageWidth; x++ {
+			ch := make(chan color3, samplesPerPixel)
 
 			pixelColor := color3{0, 0, 0}
-			for s := 0; s < samplesPerPixel; s++ {
-				//Horizontal ratio?
-				u := (float64(x) + randomDouble()) / float64(imageWidth-1)
-				//Vertical ratio?
-				v := (float64(y) + randomDouble()) / float64(imageHeight-1)
-				currentRay := c.getRay(u, v)
-				rayColor := currentRay.RayColor(world, maxDepth)
-				pixelColor = pixelColor.Add(rayColor)
+			sendRays(&world, &c, x, y, imageWidth, imageHeight, samplesPerPixel, maxDepth, ch)
+
+			for i := 0; i < samplesPerPixel; i++ {
+				pixelColor = pixelColor.Add(<-ch)
 			}
 			// Colors are defined by Red, Green, Blue, Alpha uint8 values.
 			img.Set(x, imageHeight-y, color3ToRGBA(pixelColor, samplesPerPixel))
@@ -64,4 +62,23 @@ func main() {
 
 	t1 := time.Now()
 	fmt.Printf("The call took %v to run.\n", t1.Sub(t0))
+}
+
+func sendRays(world *hittableList, c *camera, x int, y int, imageWidth int, imageHeight int, samplesPerPixel int, maxDepth int, ch chan color3) {
+
+	for s := 0; s < samplesPerPixel; s++ {
+		go func() {
+			rnd := rand.New(rand.NewSource(rand.Int63()))
+
+			//Horizontal ratio?
+			u := (float64(x) + randomDouble(rnd)) / float64(imageWidth-1)
+			//Vertical ratio?
+			v := (float64(y) + randomDouble(rnd)) / float64(imageHeight-1)
+
+			currentRay := c.getRay(u, v, rnd)
+			rayColor := currentRay.RayColor(world, maxDepth, rnd)
+			// pixelColor = pixelColor.Add(rayColor)
+			ch <- rayColor
+		}()
+	}
 }

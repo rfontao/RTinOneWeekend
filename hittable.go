@@ -78,13 +78,13 @@ type hittableList struct {
 	objects []hittable
 }
 
-func (list hittableList) hit(r *ray, tMin float64, tMax float64) (rec *hitRecord, hit bool) {
+func (list *hittableList) hit(r *ray, tMin float64, tMax float64) (rec *hitRecord, hit bool) {
 
 	hitAnything := false
 	closestSoFar := tMax
 
 	for _, obj := range list.objects {
-		if hitRec, hit := obj.hit(r, tMin, closestSoFar); hit == true {
+		if hitRec, hit := obj.hit(r, tMin, closestSoFar); hit {
 			hitAnything = true
 			closestSoFar = hitRec.t
 			rec = hitRec

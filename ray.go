@@ -1,5 +1,7 @@
 package main
 
+import "math/rand"
+
 type ray struct {
 	origin    point3
 	direction vec3
@@ -10,19 +12,19 @@ func (r *ray) At(t float64) point3 {
 }
 
 //"Background" color (colors can be changed)
-func (r *ray) RayColor(world hittable, maxDepth int) color3 {
+func (r *ray) RayColor(world hittable, maxDepth int, rnd *rand.Rand) color3 {
 	if maxDepth <= 0 {
 		//No more light gathered
 		return color3{0, 0, 0}
 	}
 
 	rec, hit := world.hit(r, 0.001, infinity)
-	if hit == true {
+	if hit {
 
-		scattered, attenuation, scatter := rec.mat.scatter(r, rec)
+		scattered, attenuation, scatter := rec.mat.scatter(r, rec, rnd)
 		// attenuation.Print()
 		if scatter {
-			return attenuation.MultEach(scattered.RayColor(world, maxDepth-1))
+			return attenuation.MultEach(scattered.RayColor(world, maxDepth-1, rnd))
 		}
 		return color3{0, 0, 0}
 	}

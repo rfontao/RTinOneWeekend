@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"math"
+	"math/rand"
 )
 
 type vec3 [3]float64
@@ -72,17 +73,17 @@ func Lerp(start vec3, end vec3, t float64) vec3 {
 	return start.Mult(1.0 - t).Add(end.Mult(t))
 }
 
-func randomVec3() vec3 {
-	return vec3{randomDouble(), randomDouble(), randomDouble()}
+func randomVec3(rnd *rand.Rand) vec3 {
+	return vec3{randomDouble(rnd), randomDouble(rnd), randomDouble(rnd)}
 }
 
-func randomRangeVec3(min float64, max float64) vec3 {
-	return vec3{randomDoubleRange(min, max), randomDoubleRange(min, max), randomDoubleRange(min, max)}
+func randomRangeVec3(min float64, max float64, rnd *rand.Rand) vec3 {
+	return vec3{randomDoubleRange(min, max, rnd), randomDoubleRange(min, max, rnd), randomDoubleRange(min, max, rnd)}
 }
 
-func randomInUnitSphere() vec3 {
+func randomInUnitSphere(rnd *rand.Rand) vec3 {
 	for {
-		p := randomRangeVec3(-1, 1)
+		p := randomRangeVec3(-1, 1, rnd)
 		if p.LengthSquared() >= 1 {
 			continue
 		}
@@ -91,12 +92,12 @@ func randomInUnitSphere() vec3 {
 }
 
 //True lambertian reflection
-func randomUnitVector() vec3 {
-	return randomInUnitSphere().Normalize()
+func randomUnitVector(rnd *rand.Rand) vec3 {
+	return randomInUnitSphere(rnd).Normalize()
 }
 
-func randomInHemisphere(normal vec3) vec3 {
-	inUnitSphere := randomInUnitSphere()
+func randomInHemisphere(normal vec3, rnd *rand.Rand) vec3 {
+	inUnitSphere := randomInUnitSphere(rnd)
 
 	if inUnitSphere.Dot(normal) > 0.0 {
 		return inUnitSphere
@@ -105,9 +106,9 @@ func randomInHemisphere(normal vec3) vec3 {
 
 }
 
-func randomInUnitDisk() vec3 {
+func randomInUnitDisk(rnd *rand.Rand) vec3 {
 	for {
-		p := vec3{randomDoubleRange(-1, 1), randomDoubleRange(-1, 1), 0}
+		p := vec3{randomDoubleRange(-1, 1, rnd), randomDoubleRange(-1, 1, rnd), 0}
 		if p.LengthSquared() >= 1 {
 			continue
 		}
