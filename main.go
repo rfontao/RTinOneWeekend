@@ -6,26 +6,27 @@ import (
 	"image/png"
 	"math/rand"
 	"os"
+	"sync"
 	"time"
 )
 
 func main() {
 
 	//Image
-	const aspectRatio = 16.0 / 9.0
-	const imageWidth int = 400
+	const aspectRatio = 3.0 / 2.0
+	const imageWidth int = 1200
 	const imageHeight int = int(float64(imageWidth) / aspectRatio)
 	const samplesPerPixel int = 100
-	const maxDepth int = 50
+	const maxDepth int = 25
 
 	// World/Camera
-	world := threeBallScene()
+	world := randomScene()
 
 	//Camera
-	lookFrom := point3{-2, 2, 1}
-	lookAt := point3{0, 0, -1}
+	lookFrom := point3{13, 2, 3}
+	lookAt := point3{0, 0, 0}
 	up := vec3{0, 1, 0}
-	distToFocus := 5.0
+	distToFocus := 10.0
 	aperture := 0.1
 
 	c := initCamera(lookFrom, lookAt, up, 20, aspectRatio, aperture, distToFocus)
@@ -40,21 +41,27 @@ func main() {
 	img := image.NewRGBA(image.Rectangle{upLeft, lowRight})
 
 	// Set color for each pixel.
+	wg := sync.WaitGroup{}
 	for y := imageHeight - 1; y >= 0; y-- {
-		fmt.Printf("%d/%d lines\n", imageHeight-y, imageHeight)
-		for x := 0; x < imageWidth; x++ {
-			ch := make(chan color3, samplesPerPixel)
+		go func(row int) {
+			wg.Add(1)
+			for x := 0; x < imageWidth; x++ {
+				ch := make(chan color3, samplesPerPixel)
 
-			pixelColor := color3{0, 0, 0}
-			sendRays(&world, &c, x, y, imageWidth, imageHeight, samplesPerPixel, maxDepth, ch)
+				pixelColor := color3{0, 0, 0}
+				sendRays(&world, &c, x, row, imageWidth, imageHeight, samplesPerPixel, maxDepth, ch)
 
-			for i := 0; i < samplesPerPixel; i++ {
-				pixelColor = pixelColor.Add(<-ch)
+				for i := 0; i < samplesPerPixel; i++ {
+					pixelColor = pixelColor.Add(<-ch)
+				}
+				// Colors are defined by Red, Green, Blue, Alpha uint8 values.
+				img.Set(x, imageHeight-row, color3ToRGBA(pixelColor, samplesPerPixel))
 			}
-			// Colors are defined by Red, Green, Blue, Alpha uint8 values.
-			img.Set(x, imageHeight-y, color3ToRGBA(pixelColor, samplesPerPixel))
-		}
+			fmt.Printf("%d/%d lines\n", imageHeight-row, imageHeight)
+			wg.Done()
+		}(y)
 	}
+	wg.Wait()
 
 	// Encode as PNG.
 	f, _ := os.Create("a.png")

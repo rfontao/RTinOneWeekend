@@ -12,7 +12,7 @@ func (r *ray) At(t float64) point3 {
 }
 
 //"Background" color (colors can be changed)
-func (r *ray) RayColor(world hittable, maxDepth int, rnd *rand.Rand) color3 {
+func (r *ray) RayColor(world *hittableList, maxDepth int, rnd *rand.Rand) color3 {
 	if maxDepth <= 0 {
 		//No more light gathered
 		return color3{0, 0, 0}
