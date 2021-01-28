@@ -5,8 +5,8 @@ import (
 )
 
 type hitRecord struct {
-	p         point3
-	normal    vec3
+	p         Point3
+	normal    Vec3
 	t         float64
 	frontFace bool
 	mat       material
@@ -16,7 +16,7 @@ type hittable interface {
 	hit(r *ray, tMin float64, tMax float64) (*hitRecord, bool)
 }
 
-func (rec *hitRecord) setFaceNormal(r *ray, outwardNormal vec3) {
+func (rec *hitRecord) setFaceNormal(r *ray, outwardNormal Vec3) {
 	rec.frontFace = r.direction.Dot(outwardNormal) < 0
 	if rec.frontFace == true {
 		rec.normal = outwardNormal
@@ -26,7 +26,7 @@ func (rec *hitRecord) setFaceNormal(r *ray, outwardNormal vec3) {
 }
 
 type sphere struct {
-	center point3
+	center Point3
 	radius float64
 	mat    material
 }
@@ -94,7 +94,6 @@ func (list *hittableList) hit(r *ray, tMin float64, tMax float64) (rec *hitRecor
 	return rec, hitAnything
 }
 
-//TODO
 func (list *hittableList) Add(h hittable) {
 	list.objects = append(list.objects, h)
 }

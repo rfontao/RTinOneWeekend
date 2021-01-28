@@ -10,23 +10,37 @@ import (
 	"time"
 )
 
+type options struct {
+	aspectRatio     float64
+	imageWidth      int
+	imageHeight     int
+	samplesPerPixel int
+	maxDepth        int
+}
+
 func main() {
 
 	//Image
-	const aspectRatio = 3.0 / 2.0
-	const imageWidth int = 1200
-	const imageHeight int = int(float64(imageWidth) / aspectRatio)
-	const samplesPerPixel int = 100
-	const maxDepth int = 25
+	aspectRatio := 16.0 / 9.0
+	imageWidth := 400
+	imageHeight := int(float64(imageWidth) / aspectRatio)
+
+	opts := options{
+		aspectRatio:     aspectRatio,
+		imageWidth:      imageWidth,
+		imageHeight:     imageHeight,
+		samplesPerPixel: 100,
+		maxDepth:        50,
+	}
 
 	// World/Camera
-	world := randomScene()
+	world := threeBallScene()
 
 	//Camera
-	lookFrom := point3{13, 2, 3}
-	lookAt := point3{0, 0, 0}
-	up := vec3{0, 1, 0}
-	distToFocus := 10.0
+	lookFrom := Point3{-2, 2, 1}
+	lookAt := Point3{0, 0, -1}
+	up := Vec3{0, 1, 0}
+	distToFocus := lookAt.Sub(lookFrom).Length()
 	aperture := 0.1
 
 	c := initCamera(lookFrom, lookAt, up, 20, aspectRatio, aperture, distToFocus)
@@ -43,20 +57,22 @@ func main() {
 	// Set color for each pixel.
 	wg := sync.WaitGroup{}
 	for y := imageHeight - 1; y >= 0; y-- {
+		//Draw each pixel of line
 		go func(row int) {
 			wg.Add(1)
 			for x := 0; x < imageWidth; x++ {
-				ch := make(chan color3, samplesPerPixel)
+				ch := make(chan Color3, opts.samplesPerPixel)
 
-				pixelColor := color3{0, 0, 0}
-				sendRays(&world, &c, x, row, imageWidth, imageHeight, samplesPerPixel, maxDepth, ch)
+				pixelColor := Color3{0, 0, 0}
+				sendRays(&world, &c, x, row, &opts, ch)
 
-				for i := 0; i < samplesPerPixel; i++ {
+				for i := 0; i < opts.samplesPerPixel; i++ {
 					pixelColor = pixelColor.Add(<-ch)
 				}
 				// Colors are defined by Red, Green, Blue, Alpha uint8 values.
-				img.Set(x, imageHeight-row, color3ToRGBA(pixelColor, samplesPerPixel))
+				img.Set(x, imageHeight-row, Color3ToRGBA(pixelColor, opts.samplesPerPixel))
 			}
+			//Maybe change later
 			fmt.Printf("%d/%d lines\n", imageHeight-row, imageHeight)
 			wg.Done()
 		}(y)
@@ -64,26 +80,26 @@ func main() {
 	wg.Wait()
 
 	// Encode as PNG.
-	f, _ := os.Create("a.png")
+	f, _ := os.Create("images/a.png")
 	png.Encode(f, img)
 
 	t1 := time.Now()
 	fmt.Printf("The call took %v to run.\n", t1.Sub(t0))
 }
 
-func sendRays(world *hittableList, c *camera, x int, y int, imageWidth int, imageHeight int, samplesPerPixel int, maxDepth int, ch chan color3) {
+func sendRays(world *hittableList, c *camera, x int, y int, opts *options, ch chan Color3) {
 
-	for s := 0; s < samplesPerPixel; s++ {
+	for s := 0; s < opts.samplesPerPixel; s++ {
 		go func() {
 			rnd := rand.New(rand.NewSource(rand.Int63()))
 
 			//Horizontal ratio?
-			u := (float64(x) + randomDouble(rnd)) / float64(imageWidth-1)
+			u := (float64(x) + RandomDouble(rnd)) / float64(opts.imageWidth-1)
 			//Vertical ratio?
-			v := (float64(y) + randomDouble(rnd)) / float64(imageHeight-1)
+			v := (float64(y) + RandomDouble(rnd)) / float64(opts.imageHeight-1)
 
 			currentRay := c.getRay(u, v, rnd)
-			rayColor := currentRay.RayColor(world, maxDepth, rnd)
+			rayColor := currentRay.RayColor(world, opts.maxDepth, rnd)
 			// pixelColor = pixelColor.Add(rayColor)
 			ch <- rayColor
 		}()

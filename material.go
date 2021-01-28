@@ -6,18 +6,18 @@ import (
 )
 
 type material interface {
-	scatter(rayIn *ray, rec *hitRecord, rnd *rand.Rand) (scattered *ray, attenuation *color3, scatter bool)
+	scatter(rayIn *ray, rec *hitRecord, rnd *rand.Rand) (scattered *ray, attenuation *Color3, scatter bool)
 }
 
 type lambertian struct {
-	albedo color3
+	albedo Color3
 }
 
-func (lamb lambertian) scatter(rayIn *ray, rec *hitRecord, rnd *rand.Rand) (scattered *ray, attenuation *color3, scatter bool) {
+func (lamb lambertian) scatter(rayIn *ray, rec *hitRecord, rnd *rand.Rand) (scattered *ray, attenuation *Color3, scatter bool) {
 
-	scatterDirection := rec.normal.Add(randomUnitVector(rnd))
+	scatterDirection := rec.normal.Add(RandomUnitVector(rnd))
 	// Catch degenerate scatter direction
-	if scatterDirection.nearZero() {
+	if scatterDirection.NearZero() {
 		scatterDirection = rec.normal
 	}
 
@@ -27,54 +27,54 @@ func (lamb lambertian) scatter(rayIn *ray, rec *hitRecord, rnd *rand.Rand) (scat
 }
 
 type metal struct {
-	albedo color3
+	albedo Color3
 	fuzz   float64 //Radius of sphere
 }
 
-func (m metal) scatter(rayIn *ray, rec *hitRecord, rnd *rand.Rand) (scattered *ray, attenuation *color3, scatter bool) {
+func (m metal) scatter(rayIn *ray, rec *hitRecord, rnd *rand.Rand) (scattered *ray, attenuation *Color3, scatter bool) {
 
-	reflected := reflect(rayIn.direction.Normalize(), rec.normal)
+	Reflected := Reflect(rayIn.direction.Normalize(), rec.normal)
 
-	scattered = &ray{rec.p, reflected.Add(randomInUnitSphere(rnd).Mult(m.fuzz))}
+	scattered = &ray{rec.p, Reflected.Add(RandomInUnitSphere(rnd).Mult(m.fuzz))}
 	attenuation = &m.albedo
 	return scattered, attenuation, scattered.direction.Dot(rec.normal) > 0
 }
 
 type dielectric struct {
-	ir float64 //Index of refraction
+	ir float64 //Index of Refraction
 }
 
-func (m dielectric) scatter(rayIn *ray, rec *hitRecord, rnd *rand.Rand) (scattered *ray, attenuation *color3, scatter bool) {
+func (m dielectric) scatter(rayIn *ray, rec *hitRecord, rnd *rand.Rand) (scattered *ray, attenuation *Color3, scatter bool) {
 
-	var refractionRatio float64
+	var RefractionRatio float64
 	if rec.frontFace {
-		refractionRatio = 1.0 / m.ir
+		RefractionRatio = 1.0 / m.ir
 	} else {
-		refractionRatio = m.ir
+		RefractionRatio = m.ir
 	}
 
 	unitDirection := rayIn.direction.Normalize()
 	cosTheta := math.Min(unitDirection.Mult(-1).Dot(rec.normal), 1.0)
 	sinTheta := math.Sqrt(1.0 - math.Pow(cosTheta, 2))
 
-	cannotRefract := refractionRatio*sinTheta > 1.0
+	cannotRefract := RefractionRatio*sinTheta > 1.0
 
-	var direction vec3
-	if cannotRefract || reflectance(cosTheta, refractionRatio) > randomDouble(rnd) {
-		direction = reflect(unitDirection, rec.normal)
+	var direction Vec3
+	if cannotRefract || reflectance(cosTheta, RefractionRatio) > RandomDouble(rnd) {
+		direction = Reflect(unitDirection, rec.normal)
 	} else {
-		direction = refract(unitDirection, rec.normal, refractionRatio)
+		direction = Refract(unitDirection, rec.normal, RefractionRatio)
 
 	}
 
-	attenuation = &color3{1, 1, 1}
+	attenuation = &Color3{1, 1, 1}
 	scattered = &ray{rec.p, direction}
 
 	return scattered, attenuation, true
 }
 
 func reflectance(cosine float64, refIndex float64) float64 {
-	// Use Schlick's approximation for reflectance.
+	// Use Schlick's approximation for Reflectance.
 	r0 := math.Pow((1.0-refIndex)/(1.0+refIndex), 2)
 	return r0 + (1.0-r0)*math.Pow(1.0-cosine, 5)
 }
