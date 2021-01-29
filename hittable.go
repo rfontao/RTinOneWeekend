@@ -5,18 +5,18 @@ import (
 )
 
 type hitRecord struct {
-	p         point3
-	normal    vec3
+	p         Point3
+	normal    Vec3
 	t         float64
 	frontFace bool
 	mat       material
 }
 
 type hittable interface {
-	hit(r ray, tMin float64, tMax float64) (hitRecord, bool)
+	hit(r *ray, tMin float64, tMax float64) (*hitRecord, bool)
 }
 
-func (rec *hitRecord) setFaceNormal(r ray, outwardNormal vec3) {
+func (rec *hitRecord) setFaceNormal(r *ray, outwardNormal Vec3) {
 	rec.frontFace = r.direction.Dot(outwardNormal) < 0
 	if rec.frontFace == true {
 		rec.normal = outwardNormal
@@ -26,12 +26,12 @@ func (rec *hitRecord) setFaceNormal(r ray, outwardNormal vec3) {
 }
 
 type sphere struct {
-	center point3
+	center Point3
 	radius float64
 	mat    material
 }
 
-func (s sphere) hit(r ray, tMin float64, tMax float64) (rec hitRecord, hits bool) {
+func (s *sphere) hit(r *ray, tMin float64, tMax float64) (*hitRecord, bool) {
 
 	// const tolerance float64 = 0.01
 
@@ -43,7 +43,7 @@ func (s sphere) hit(r ray, tMin float64, tMax float64) (rec hitRecord, hits bool
 	discriminant := math.Pow(h, 2) - a*c
 
 	if discriminant < 0 {
-		return rec, false
+		return nil, false
 	}
 	discSqrt := math.Sqrt(discriminant)
 
@@ -53,7 +53,7 @@ func (s sphere) hit(r ray, tMin float64, tMax float64) (rec hitRecord, hits bool
 	if root < tMin || root > tMax {
 		root = (-h + discSqrt) / a
 		if root < tMin || root > tMax {
-			return rec, false
+			return nil, false
 		}
 	}
 
@@ -62,26 +62,29 @@ func (s sphere) hit(r ray, tMin float64, tMax float64) (rec hitRecord, hits bool
 	// 	return rec, false
 	// }
 
-	rec.t = root
-	rec.p = r.At(rec.t)
-	outwardNormal := rec.p.Sub(s.center).Div(s.radius)
+	hitPoint := r.At(root)
+	outwardNormal := hitPoint.Sub(s.center).Div(s.radius)
+	rec := hitRecord{
+		t:   root,
+		p:   hitPoint,
+		mat: s.mat,
+	}
 	rec.setFaceNormal(r, outwardNormal)
-	rec.mat = s.mat
 
-	return rec, true
+	return &rec, true
 }
 
 type hittableList struct {
 	objects []hittable
 }
 
-func (list hittableList) hit(r ray, tMin float64, tMax float64) (rec hitRecord, hit bool) {
+func (list *hittableList) hit(r *ray, tMin float64, tMax float64) (rec *hitRecord, hit bool) {
 
 	hitAnything := false
 	closestSoFar := tMax
 
 	for _, obj := range list.objects {
-		if hitRec, hit := obj.hit(r, tMin, closestSoFar); hit == true {
+		if hitRec, hit := obj.hit(r, tMin, closestSoFar); hit {
 			hitAnything = true
 			closestSoFar = hitRec.t
 			rec = hitRec
@@ -92,5 +95,5 @@ func (list hittableList) hit(r ray, tMin float64, tMax float64) (rec hitRecord, 
 }
 
 func (list *hittableList) Add(h hittable) {
-	*list = hittableList{append(list.objects, h)}
+	list.objects = append(list.objects, h)
 }

@@ -4,32 +4,50 @@ import (
 	"fmt"
 	"image"
 	"image/png"
-	"math"
+	"math/rand"
 	"os"
+	"sync"
+	"time"
 )
+
+type options struct {
+	aspectRatio     float64
+	imageWidth      int
+	imageHeight     int
+	samplesPerPixel int
+	maxDepth        int
+}
 
 func main() {
 
 	//Image
-	const aspectRatio = 3.0 / 2.0
-	const imageWidth int = 1200
-	const imageHeight int = int(float64(imageWidth) / aspectRatio)
-	const samplesPerPixel int = 100
-	const maxDepth int = 25
+	aspectRatio := 16.0 / 9.0
+	imageWidth := 400
+	imageHeight := int(float64(imageWidth) / aspectRatio)
 
-	//World
-	var world hittableList = randomScene()
+	opts := options{
+		aspectRatio:     aspectRatio,
+		imageWidth:      imageWidth,
+		imageHeight:     imageHeight,
+		samplesPerPixel: 100,
+		maxDepth:        50,
+	}
+
+	// World/Camera
+	world := threeBallScene()
 
 	//Camera
-	lookFrom := point3{13, 2, 3}
-	lookAt := point3{0, 0, 0}
-	up := vec3{0, 1, 0}
-	distToFocus := 10.0
+	lookFrom := Point3{-2, 2, 1}
+	lookAt := Point3{0, 0, -1}
+	up := Vec3{0, 1, 0}
+	distToFocus := lookAt.Sub(lookFrom).Length()
 	aperture := 0.1
 
 	c := initCamera(lookFrom, lookAt, up, 20, aspectRatio, aperture, distToFocus)
 
 	//Render
+
+	t0 := time.Now()
 
 	upLeft := image.Point{0, 0}
 	lowRight := image.Point{imageWidth - 1, imageHeight - 1}
@@ -37,68 +55,53 @@ func main() {
 	img := image.NewRGBA(image.Rectangle{upLeft, lowRight})
 
 	// Set color for each pixel.
+	wg := sync.WaitGroup{}
 	for y := imageHeight - 1; y >= 0; y-- {
-		fmt.Printf("%d/%d lines\n", imageHeight-y, imageHeight-1)
-		for x := 0; x < imageWidth; x++ {
+		//Draw each pixel of line
+		go func(row int) {
+			wg.Add(1)
+			for x := 0; x < imageWidth; x++ {
+				ch := make(chan Color3, opts.samplesPerPixel)
 
-			pixelColor := color3{0, 0, 0}
-			for s := 0; s < samplesPerPixel; s++ {
-				//Horizontal ratio?
-				u := (float64(x) + randomDouble()) / float64(imageWidth-1)
-				//Vertical ratio?
-				v := (float64(y) + randomDouble()) / float64(imageHeight-1)
-				currentRay := c.getRay(u, v)
-				rayColor := currentRay.RayColor(world, maxDepth)
-				pixelColor = pixelColor.Add(rayColor)
+				pixelColor := Color3{0, 0, 0}
+				sendRays(&world, &c, x, row, &opts, ch)
+
+				for i := 0; i < opts.samplesPerPixel; i++ {
+					pixelColor = pixelColor.Add(<-ch)
+				}
+				// Colors are defined by Red, Green, Blue, Alpha uint8 values.
+				img.Set(x, imageHeight-row, Color3ToRGBA(pixelColor, opts.samplesPerPixel))
 			}
-			// Colors are defined by Red, Green, Blue, Alpha uint8 values.
-			img.Set(x, imageHeight-y, color3ToRGBA(pixelColor, samplesPerPixel))
-		}
+			//Maybe change later
+			fmt.Printf("%d/%d lines\n", imageHeight-row, imageHeight)
+			wg.Done()
+		}(y)
 	}
+	wg.Wait()
 
 	// Encode as PNG.
-	f, _ := os.Create("a.png")
+	f, _ := os.Create("images/a.png")
 	png.Encode(f, img)
 
-	// var a ray = ray{point3{0, 0, 0}, vec3{1, 0, 3}}
-
-	// // fmt.Print(a.Dot(b))
-	// a.At(2).Print()
+	t1 := time.Now()
+	fmt.Printf("The call took %v to run.\n", t1.Sub(t0))
 }
 
-/*
-HitSphere checks if a ray r hits a sphere with center center and radius r
-If so return t
+func sendRays(world *hittableList, c *camera, x int, y int, opts *options, ch chan Color3) {
 
-t2b⋅b+2tb⋅(A−C)+(A−C)⋅(A−C)−r2=0 => a = b.b; b =
-A = ray origin
-b = ray direction
+	for s := 0; s < opts.samplesPerPixel; s++ {
+		go func() {
+			rnd := rand.New(rand.NewSource(rand.Int63()))
 
-*/
-func HitSphere(center point3, radius float64, r ray) float64 {
-	rToCenter := r.origin.Sub(center) //A - C
-	a := r.direction.LengthSquared()  // r dir DOT r dir
-	h := rToCenter.Dot(r.direction)
-	c := rToCenter.LengthSquared() - math.Pow(radius, 2)
+			//Horizontal ratio?
+			u := (float64(x) + RandomDouble(rnd)) / float64(opts.imageWidth-1)
+			//Vertical ratio?
+			v := (float64(y) + RandomDouble(rnd)) / float64(opts.imageHeight-1)
 
-	discriminant := math.Pow(h, 2) - a*c
-
-	if discriminant < 0 {
-		return -1.0
+			currentRay := c.getRay(u, v, rnd)
+			rayColor := currentRay.RayColor(world, opts.maxDepth, rnd)
+			// pixelColor = pixelColor.Add(rayColor)
+			ch <- rayColor
+		}()
 	}
-	return (-h - math.Sqrt(discriminant)/a)
 }
-
-// func HitSphere(center point3, radius float64, r ray) float64 {
-// 	rToCenter := r.origin.Sub(center) //A - C
-// 	a := r.direction.Dot(r.direction)
-// 	b := rToCenter.Dot(r.direction) * 2.0
-// 	c := rToCenter.Dot(rToCenter) - math.Pow(radius, 2)
-
-// 	discriminat := math.Pow(b, 2) - 4.0*a*c
-
-// 	if discriminat < 0 {
-// 		return -1.0
-// 	}
-// 	return (-b - math.Sqrt(discriminat)/(2.0*a))
-// }
