@@ -29,21 +29,21 @@ func main() {
 		aspectRatio:     aspectRatio,
 		imageWidth:      imageWidth,
 		imageHeight:     imageHeight,
-		samplesPerPixel: 100,
-		maxDepth:        50,
+		samplesPerPixel: 10,
+		maxDepth:        25,
 	}
 
 	// World/Camera
-	world := threeBallScene()
+	world := randomSceneMoving()
 
 	//Camera
-	lookFrom := Point3{-2, 2, 1}
-	lookAt := Point3{0, 0, -1}
+	lookFrom := Point3{13, 2, 3}
+	lookAt := Point3{0, 0, 0}
 	up := Vec3{0, 1, 0}
-	distToFocus := lookAt.Sub(lookFrom).Length()
+	distToFocus := 10.0 //lookAt.Sub(lookFrom).Length()
 	aperture := 0.1
 
-	c := initCamera(lookFrom, lookAt, up, 20, aspectRatio, aperture, distToFocus)
+	c := initCamera(lookFrom, lookAt, up, 20, aspectRatio, aperture, distToFocus, 0.0, 1.0)
 
 	//Render
 

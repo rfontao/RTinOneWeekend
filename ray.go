@@ -5,6 +5,7 @@ import "math/rand"
 type ray struct {
 	origin    Point3
 	direction Vec3
+	time      float64
 }
 
 func (r *ray) At(t float64) Point3 {

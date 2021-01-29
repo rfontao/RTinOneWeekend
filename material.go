@@ -21,7 +21,7 @@ func (lamb lambertian) scatter(rayIn *ray, rec *hitRecord, rnd *rand.Rand) (scat
 		scatterDirection = rec.normal
 	}
 
-	scattered = &ray{rec.p, scatterDirection}
+	scattered = &ray{rec.p, scatterDirection, rayIn.time}
 	attenuation = &lamb.albedo
 	return scattered, attenuation, true
 }
@@ -35,7 +35,7 @@ func (m metal) scatter(rayIn *ray, rec *hitRecord, rnd *rand.Rand) (scattered *r
 
 	Reflected := Reflect(rayIn.direction.Normalize(), rec.normal)
 
-	scattered = &ray{rec.p, Reflected.Add(RandomInUnitSphere(rnd).Mult(m.fuzz))}
+	scattered = &ray{rec.p, Reflected.Add(RandomInUnitSphere(rnd).Mult(m.fuzz)), rayIn.time}
 	attenuation = &m.albedo
 	return scattered, attenuation, scattered.direction.Dot(rec.normal) > 0
 }
@@ -68,7 +68,7 @@ func (m dielectric) scatter(rayIn *ray, rec *hitRecord, rnd *rand.Rand) (scatter
 	}
 
 	attenuation = &Color3{1, 1, 1}
-	scattered = &ray{rec.p, direction}
+	scattered = &ray{rec.p, direction, rayIn.time}
 
 	return scattered, attenuation, true
 }

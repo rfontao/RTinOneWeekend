@@ -74,6 +74,61 @@ func (s *sphere) hit(r *ray, tMin float64, tMax float64) (*hitRecord, bool) {
 	return &rec, true
 }
 
+type movingSphere struct {
+	center0, center1 Point3
+	time0, time1     float64
+	radius           float64
+	mat              material
+}
+
+func (s *movingSphere) hit(r *ray, tMin float64, tMax float64) (*hitRecord, bool) {
+
+	// const tolerance float64 = 0.01
+
+	rToCenter := r.origin.Sub(s.center(r.time)) //A - C
+	a := r.direction.LengthSquared()            // r dir DOT r dir
+	h := rToCenter.Dot(r.direction)
+	c := rToCenter.LengthSquared() - math.Pow(s.radius, 2)
+
+	discriminant := math.Pow(h, 2) - a*c
+
+	if discriminant < 0 {
+		return nil, false
+	}
+	discSqrt := math.Sqrt(discriminant)
+
+	// Find the nearest root that lies in the acceptable range
+	root := (-h - discSqrt) / a
+
+	if root < tMin || root > tMax {
+		root = (-h + discSqrt) / a
+		if root < tMin || root > tMax {
+			return nil, false
+		}
+	}
+
+	//Used to make the rays not colide with t = 0
+	// if math.Abs(root) < tolerance {
+	// 	return rec, false
+	// }
+
+	hitPoint := r.At(root)
+	outwardNormal := hitPoint.Sub(s.center(r.time)).Div(s.radius)
+	rec := hitRecord{
+		t:   root,
+		p:   hitPoint,
+		mat: s.mat,
+	}
+	rec.setFaceNormal(r, outwardNormal)
+
+	return &rec, true
+}
+
+func (s *movingSphere) center(time float64) Point3 {
+	return Lerp(s.center0, s.center1, time)
+	// return s.center0 + ((time-s.time0)/(s.time1-s.time0))*(s.center1.Sub(s.center0))
+}
+
 type hittableList struct {
 	objects []hittable
 }
