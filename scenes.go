@@ -5,7 +5,10 @@ import (
 	"math/rand"
 )
 
-func threeBallScene() (world hittableList) {
+func threeBallScene() hittable {
+
+	var world hittableList
+
 	materialGround := lambertian{Color3{0.8, 0.8, 0.0}}
 	materialCenter := lambertian{Color3{0.1, 0.2, 0.5}}
 	// materialLeft := metal{Color3{0.8, 0.8, 0.8}, 0.3}
@@ -19,10 +22,12 @@ func threeBallScene() (world hittableList) {
 	world.Add(&sphere{Point3{-1, 0, -1}, -0.4, materialLeft}) //TGlass ball
 	world.Add(&sphere{Point3{1, 0, -1}, 0.5, materialRight})
 
-	return world
+	return newBvhNode(world.objects, 0, len(world.objects), 0.0, 1.0)
 }
 
-func testWideViewScene() (world hittableList) {
+func testWideViewScene() hittable {
+
+	var world hittableList
 	//Test of wide view
 	R := math.Cos(math.Pi / 4.0)
 	materialLeft := lambertian{Color3{0, 0, 1}}
@@ -31,10 +36,11 @@ func testWideViewScene() (world hittableList) {
 	world.Add(&sphere{Point3{-R, 0, -1}, R, materialLeft})
 	world.Add(&sphere{Point3{R, 0, -1}, R, materialRight})
 
-	return world
+	return newBvhNode(world.objects, 0, len(world.objects), 0.0, 1.0)
 }
 
-func randomScene() (world hittableList) {
+func randomScene() hittable {
+	var world hittableList
 
 	groundMaterial := lambertian{Color3{0.5, 0.5, 0.5}}
 	world.Add(&sphere{Point3{0, -1000, 0}, 1000, groundMaterial})
@@ -76,11 +82,13 @@ func randomScene() (world hittableList) {
 	material3 := metal{Color3{0.7, 0.6, 0.5}, 0.0}
 	world.Add(&sphere{Point3{4, 1, 0}, 1.0, material3})
 
-	return world
+	return newBvhNode(world.objects, 0, len(world.objects), 0.0, 1.0)
 
 }
 
-func randomSceneMoving() (world hittableList) {
+func randomSceneMoving() hittable {
+
+	var world hittableList
 
 	groundMaterial := lambertian{Color3{0.5, 0.5, 0.5}}
 	world.Add(&sphere{Point3{0, -1000, 0}, 1000, groundMaterial})
@@ -123,6 +131,6 @@ func randomSceneMoving() (world hittableList) {
 	material3 := metal{Color3{0.7, 0.6, 0.5}, 0.0}
 	world.Add(&sphere{Point3{4, 1, 0}, 1.0, material3})
 
-	return world
+	return newBvhNode(world.objects, 0, len(world.objects), 0.0, 1.0)
 
 }

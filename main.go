@@ -22,19 +22,19 @@ func main() {
 
 	//Image
 	aspectRatio := 16.0 / 9.0
-	imageWidth := 400
+	imageWidth := 1200
 	imageHeight := int(float64(imageWidth) / aspectRatio)
 
 	opts := options{
 		aspectRatio:     aspectRatio,
 		imageWidth:      imageWidth,
 		imageHeight:     imageHeight,
-		samplesPerPixel: 10,
-		maxDepth:        25,
+		samplesPerPixel: 100,
+		maxDepth:        50,
 	}
 
 	// World/Camera
-	world := randomSceneMoving()
+	world := randomScene()
 
 	//Camera
 	lookFrom := Point3{13, 2, 3}
@@ -64,7 +64,7 @@ func main() {
 				ch := make(chan Color3, opts.samplesPerPixel)
 
 				pixelColor := Color3{0, 0, 0}
-				sendRays(&world, &c, x, row, &opts, ch)
+				sendRays(world, &c, x, row, &opts, ch)
 
 				for i := 0; i < opts.samplesPerPixel; i++ {
 					pixelColor = pixelColor.Add(<-ch)
@@ -87,7 +87,7 @@ func main() {
 	fmt.Printf("The call took %v to run.\n", t1.Sub(t0))
 }
 
-func sendRays(world *hittableList, c *camera, x int, y int, opts *options, ch chan Color3) {
+func sendRays(world hittable, c *camera, x int, y int, opts *options, ch chan Color3) {
 
 	for s := 0; s < opts.samplesPerPixel; s++ {
 		go func() {
