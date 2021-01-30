@@ -22,7 +22,7 @@ func main() {
 
 	//Image
 	aspectRatio := 16.0 / 9.0
-	imageWidth := 1200
+	imageWidth := 800
 	imageHeight := int(float64(imageWidth) / aspectRatio)
 
 	opts := options{
@@ -38,7 +38,7 @@ func main() {
 	vfov := 40.0
 	aperture := 0.0
 
-	switch 0 {
+	switch 3 {
 	case 1:
 		world = randomScene()
 
@@ -47,8 +47,6 @@ func main() {
 		lookAt = Point3{0, 0, 0}
 		aperture = 0.1
 		vfov = 20
-	default:
-		fallthrough
 	case 2:
 		world = twoSpheres()
 
@@ -56,6 +54,13 @@ func main() {
 		lookFrom = Point3{13, 2, 3}
 		lookAt = Point3{0, 0, 0}
 		aperture = 0.1
+		vfov = 20
+	case 3:
+		world = twoPerlinSpheres()
+
+		//Camera
+		lookFrom = Point3{13, 2, 3}
+		lookAt = Point3{0, 0, 0}
 		vfov = 20
 	}
 	// World/Camera

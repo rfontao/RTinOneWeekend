@@ -27,3 +27,13 @@ func (s checkerTexture) value(u float64, v float64, p Vec3) Color3 {
 	}
 	return s.even.value(u, v, p)
 }
+
+type noiseTexture struct {
+	noise perlin
+	scale float64
+}
+
+func (s noiseTexture) value(u float64, v float64, p Vec3) Color3 {
+
+	return Color3{1, 1, 1}.Mult(s.noise.noise(p.Mult(s.scale)))
+}

@@ -145,3 +145,14 @@ func twoSpheres() hittable {
 
 	return newBvhNode(world.objects, 0, len(world.objects), 0.0, 1.0)
 }
+
+func twoPerlinSpheres() hittable {
+	var world hittableList
+
+	noise := lambertian{noiseTexture{newPerlin(), 4}}
+
+	world.Add(&sphere{Point3{0, -1000, 0}, 1000, noise})
+	world.Add(&sphere{Point3{0, 2, 0}, 2, noise})
+
+	return newBvhNode(world.objects, 0, len(world.objects), 0.0, 1.0)
+}
