@@ -9,8 +9,8 @@ func threeBallScene() hittable {
 
 	var world hittableList
 
-	materialGround := lambertian{Color3{0.8, 0.8, 0.0}}
-	materialCenter := lambertian{Color3{0.1, 0.2, 0.5}}
+	materialGround := lambertian{solidColor{Color3{0.8, 0.8, 0.0}}}
+	materialCenter := lambertian{solidColor{Color3{0.1, 0.2, 0.5}}}
 	// materialLeft := metal{Color3{0.8, 0.8, 0.8}, 0.3}
 	// materialCenter := dielectric{1.5}
 	materialLeft := dielectric{1.5}
@@ -30,8 +30,8 @@ func testWideViewScene() hittable {
 	var world hittableList
 	//Test of wide view
 	R := math.Cos(math.Pi / 4.0)
-	materialLeft := lambertian{Color3{0, 0, 1}}
-	materialRight := lambertian{Color3{1, 0, 0}}
+	materialLeft := lambertian{solidColor{Color3{0, 0, 1}}}
+	materialRight := lambertian{solidColor{Color3{1, 0, 0}}}
 
 	world.Add(&sphere{Point3{-R, 0, -1}, R, materialLeft})
 	world.Add(&sphere{Point3{R, 0, -1}, R, materialRight})
@@ -42,7 +42,7 @@ func testWideViewScene() hittable {
 func randomScene() hittable {
 	var world hittableList
 
-	groundMaterial := lambertian{Color3{0.5, 0.5, 0.5}}
+	groundMaterial := lambertian{checkerTexture{solidColor{Color3{0.2, 0.3, 0.1}}, solidColor{Color3{0.9, 0.9, 0.9}}}}
 	world.Add(&sphere{Point3{0, -1000, 0}, 1000, groundMaterial})
 
 	for a := -11; a < 11; a++ {
@@ -55,7 +55,7 @@ func randomScene() hittable {
 				if chooseMat < 0.8 {
 					// diffuse
 					albedo := Color3{rand.Float64() * rand.Float64(), rand.Float64() * rand.Float64(), rand.Float64() * rand.Float64()}
-					sphereMaterial := lambertian{albedo}
+					sphereMaterial := lambertian{solidColor{albedo}}
 					world.Add(&sphere{center, 0.2, sphereMaterial})
 				} else if chooseMat < 0.95 {
 					// metal
@@ -76,7 +76,7 @@ func randomScene() hittable {
 	material1 := dielectric{1.5}
 	world.Add(&sphere{Point3{0, 1, 0}, 1.0, material1})
 
-	material2 := lambertian{Color3{0.4, 0.2, 0.1}}
+	material2 := lambertian{solidColor{Color3{0.4, 0.2, 0.1}}}
 	world.Add(&sphere{Point3{-4, 1, 0}, 1.0, material2})
 
 	material3 := metal{Color3{0.7, 0.6, 0.5}, 0.0}
@@ -90,7 +90,7 @@ func randomSceneMoving() hittable {
 
 	var world hittableList
 
-	groundMaterial := lambertian{Color3{0.5, 0.5, 0.5}}
+	groundMaterial := lambertian{solidColor{Color3{0.5, 0.5, 0.5}}}
 	world.Add(&sphere{Point3{0, -1000, 0}, 1000, groundMaterial})
 
 	for a := -11; a < 11; a++ {
@@ -104,7 +104,7 @@ func randomSceneMoving() hittable {
 					// diffuse
 					albedo := Color3{rand.Float64() * rand.Float64(), rand.Float64() * rand.Float64(), rand.Float64() * rand.Float64()}
 					center2 := center.Add(Vec3{0, 0.5 * rand.Float64(), 0})
-					sphereMaterial := lambertian{albedo}
+					sphereMaterial := lambertian{solidColor{albedo}}
 					world.Add(&movingSphere{center, center2, 0.0, 1.0, 0.2, sphereMaterial})
 				} else if chooseMat < 0.95 {
 					// metal
@@ -125,7 +125,7 @@ func randomSceneMoving() hittable {
 	material1 := dielectric{1.5}
 	world.Add(&sphere{Point3{0, 1, 0}, 1.0, material1})
 
-	material2 := lambertian{Color3{0.4, 0.2, 0.1}}
+	material2 := lambertian{solidColor{Color3{0.4, 0.2, 0.1}}}
 	world.Add(&sphere{Point3{-4, 1, 0}, 1.0, material2})
 
 	material3 := metal{Color3{0.7, 0.6, 0.5}, 0.0}
@@ -133,4 +133,15 @@ func randomSceneMoving() hittable {
 
 	return newBvhNode(world.objects, 0, len(world.objects), 0.0, 1.0)
 
+}
+
+func twoSpheres() hittable {
+	var world hittableList
+
+	checker := lambertian{checkerTexture{solidColor{Color3{0.2, 0.3, 0.1}}, solidColor{Color3{0.9, 0.9, 0.9}}}}
+
+	world.Add(&sphere{Point3{0, -10, 0}, 10, checker})
+	world.Add(&sphere{Point3{0, 10, 0}, 10, checker})
+
+	return newBvhNode(world.objects, 0, len(world.objects), 0.0, 1.0)
 }

@@ -29,21 +29,40 @@ func main() {
 		aspectRatio:     aspectRatio,
 		imageWidth:      imageWidth,
 		imageHeight:     imageHeight,
-		samplesPerPixel: 100,
-		maxDepth:        50,
+		samplesPerPixel: 50,
+		maxDepth:        25,
 	}
 
-	// World/Camera
-	world := randomScene()
+	var world hittable
+	var lookAt, lookFrom Point3
+	vfov := 40.0
+	aperture := 0.0
 
-	//Camera
-	lookFrom := Point3{13, 2, 3}
-	lookAt := Point3{0, 0, 0}
+	switch 0 {
+	case 1:
+		world = randomScene()
+
+		//Camera
+		lookFrom = Point3{13, 2, 3}
+		lookAt = Point3{0, 0, 0}
+		aperture = 0.1
+		vfov = 20
+	default:
+		fallthrough
+	case 2:
+		world = twoSpheres()
+
+		//Camera
+		lookFrom = Point3{13, 2, 3}
+		lookAt = Point3{0, 0, 0}
+		aperture = 0.1
+		vfov = 20
+	}
+	// World/Camera
+
 	up := Vec3{0, 1, 0}
 	distToFocus := 10.0 //lookAt.Sub(lookFrom).Length()
-	aperture := 0.1
-
-	c := initCamera(lookFrom, lookAt, up, 20, aspectRatio, aperture, distToFocus, 0.0, 1.0)
+	c := initCamera(lookFrom, lookAt, up, vfov, aspectRatio, aperture, distToFocus, 0.0, 1.0)
 
 	//Render
 

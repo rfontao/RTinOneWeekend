@@ -10,7 +10,7 @@ type material interface {
 }
 
 type lambertian struct {
-	albedo Color3
+	albedo texture
 }
 
 func (lamb lambertian) scatter(rayIn *ray, rec *hitRecord, rnd *rand.Rand) (scattered *ray, attenuation *Color3, scatter bool) {
@@ -22,8 +22,8 @@ func (lamb lambertian) scatter(rayIn *ray, rec *hitRecord, rnd *rand.Rand) (scat
 	}
 
 	scattered = &ray{rec.p, scatterDirection, rayIn.time}
-	attenuation = &lamb.albedo
-	return scattered, attenuation, true
+	at := lamb.albedo.value(rec.u, rec.v, rec.p)
+	return scattered, &at, true
 }
 
 type metal struct {

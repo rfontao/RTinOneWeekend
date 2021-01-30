@@ -12,6 +12,8 @@ type hitRecord struct {
 	t         float64
 	frontFace bool
 	mat       material
+	u         float64
+	v         float64
 }
 
 type hittable interface {
@@ -67,10 +69,13 @@ func (s *sphere) hit(r *ray, tMin float64, tMax float64) (*hitRecord, bool) {
 
 	hitPoint := r.At(root)
 	outwardNormal := hitPoint.Sub(s.center).Div(s.radius)
+	u, v := s.getSphereUV(outwardNormal)
 	rec := hitRecord{
 		t:   root,
 		p:   hitPoint,
 		mat: s.mat,
+		u:   u,
+		v:   v,
 	}
 	rec.setFaceNormal(r, outwardNormal)
 
@@ -82,6 +87,24 @@ func (s *sphere) boundingBox(time0 float64, time1 float64) (aabb, bool) {
 		s.center.Sub(Vec3{s.radius, s.radius, s.radius}),
 		s.center.Add(Vec3{s.radius, s.radius, s.radius}),
 	}, true
+}
+
+func (s *sphere) getSphereUV(p Point3) (u float64, v float64) {
+	// p: a given point on the sphere of radius one, centered at the origin.
+	// u: returned value [0,1] of angle around the Y axis from X=-1.
+	// v: returned value [0,1] of angle from Y=-1 to Y=+1.
+	//     <1 0 0> yields <0.50 0.50>       <-1  0  0> yields <0.00 0.50>
+	//     <0 1 0> yields <0.50 1.00>       < 0 -1  0> yields <0.50 0.00>
+	//     <0 0 1> yields <0.25 0.50>       < 0  0 -1> yields <0.75 0.50
+
+	minusP := p.Mult(-1)
+	theta := math.Acos(minusP.Y())
+	phi := math.Atan2(minusP.Z(), p.X()) + math.Pi
+
+	u = phi / (2.0 * math.Pi)
+	v = theta / math.Pi
+
+	return u, v
 }
 
 type movingSphere struct {
