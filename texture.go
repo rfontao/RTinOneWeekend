@@ -34,6 +34,5 @@ type noiseTexture struct {
 }
 
 func (s noiseTexture) value(u float64, v float64, p Vec3) Color3 {
-
-	return Color3{1, 1, 1}.Mult(s.noise.noise(p.Mult(s.scale)))
+	return Color3{1, 1, 1}.Mult(0.5).Mult(1 + math.Sin(p.Z()*s.scale+10*s.noise.turb(p, 7)))
 }
