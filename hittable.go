@@ -253,7 +253,63 @@ type bvhNode struct {
 	box         aabb
 }
 
-func newBvhNode(list []hittable, start int, end int, time0 float64, time1 float64) *bvhNode {
+//Old sort was wrong (needed to sort only from start to end)
+// func newBvhNode(list []hittable, start int, end int, time0 float64, time1 float64) *bvhNode {
+// 	objs := list
+
+// 	var bvh bvhNode
+
+// 	axis := rand.Intn(2 + 1)
+
+// 	comparator := []By{
+// 		//X axis
+// 		func(h1 hittable, h2 hittable) bool {
+// 			return boxCompare(h1, h2, 0)
+// 		},
+// 		//Y axis
+// 		func(h1 hittable, h2 hittable) bool {
+// 			return boxCompare(h1, h2, 1)
+// 		},
+// 		//Z axis
+// 		func(h1 hittable, h2 hittable) bool {
+// 			return boxCompare(h1, h2, 2)
+// 		},
+// 	}[axis]
+
+// 	objectSpan := end - start
+
+// 	if objectSpan == 1 {
+// 		bvh.right = objs[start]
+// 		bvh.left = objs[start]
+// 	} else if objectSpan == 2 {
+// 		if comparator(objs[start], objs[start+1]) {
+// 			bvh.left = objs[start]
+// 			bvh.right = objs[start+1]
+// 		} else {
+// 			bvh.left = objs[start+1]
+// 			bvh.right = objs[start]
+// 		}
+// 	} else {
+// 		//only part of list
+// 		comparator.Sort(objs)
+
+// 		mid := start + objectSpan/2
+// 		bvh.left = newBvhNode(objs, start, mid, time0, time1)
+// 		bvh.right = newBvhNode(objs, mid, end, time0, time1)
+// 	}
+
+// 	boxLeft, existsLeft := bvh.left.boundingBox(time0, time1)
+// 	boxRight, existsRight := bvh.right.boundingBox(time0, time1)
+
+// 	if !existsLeft || !existsRight {
+// 		panic("No bounding box in bvhnode constructor")
+// 	}
+
+// 	bvh.box = surroundingBox(boxLeft, boxRight)
+// 	return &bvh
+// }
+
+func newBvhNode(list []hittable, time0 float64, time1 float64) *bvhNode {
 	objs := list
 
 	var bvh bvhNode
@@ -275,26 +331,26 @@ func newBvhNode(list []hittable, start int, end int, time0 float64, time1 float6
 		},
 	}[axis]
 
-	objectSpan := end - start
+	objectSpan := len(objs)
 
 	if objectSpan == 1 {
-		bvh.right = objs[start]
-		bvh.left = objs[start]
+		bvh.right = objs[0]
+		bvh.left = objs[0]
 	} else if objectSpan == 2 {
-		if comparator(objs[start], objs[start+1]) {
-			bvh.left = objs[start]
-			bvh.right = objs[start+1]
+		if comparator(objs[0], objs[01]) {
+			bvh.left = objs[0]
+			bvh.right = objs[1]
 		} else {
-			bvh.left = objs[start+1]
-			bvh.right = objs[start]
+			bvh.left = objs[1]
+			bvh.right = objs[0]
 		}
 	} else {
 		//only part of list
 		comparator.Sort(objs)
 
-		mid := start + objectSpan/2
-		bvh.left = newBvhNode(objs, start, mid, time0, time1)
-		bvh.right = newBvhNode(objs, mid, end, time0, time1)
+		mid := objectSpan / 2
+		bvh.left = newBvhNode(objs[:mid], time0, time1)
+		bvh.right = newBvhNode(objs[mid:], time0, time1)
 	}
 
 	boxLeft, existsLeft := bvh.left.boundingBox(time0, time1)
@@ -343,4 +399,121 @@ func boxCompare(a hittable, b hittable, axis int) bool {
 	}
 
 	return boxA.minimum[axis] < boxB.minimum[axis]
+}
+
+type xyRect struct {
+	mat               material
+	x0, x1, y0, y1, k float64
+}
+
+func (rect *xyRect) boundingBox(time0 float64, time1 float64) (outputBox aabb, exists bool) {
+	outputBox = aabb{Point3{rect.x0, rect.y0, rect.k - 0.0001}, Point3{rect.x1, rect.y1, rect.k + 0.0001}}
+	return outputBox, true
+}
+
+func (rect *xyRect) hit(r *ray, tMin float64, tMax float64) (*hitRecord, bool) {
+
+	t := (rect.k - r.origin.Z()) / r.direction.Z()
+	if t < tMin || t > tMax {
+		return nil, false
+	}
+
+	x := r.origin.X() + t*r.direction.X()
+	y := r.origin.Y() + t*r.direction.Y()
+
+	if x < rect.x0 || x > rect.x1 || y < rect.y0 || y > rect.y1 {
+		return nil, false
+	}
+
+	var rec hitRecord
+
+	rec.u = (x - rect.x0) / (rect.x1 - rect.y0)
+	rec.v = (y - rect.y0) / (rect.y1 - rect.y0)
+	rec.t = t
+
+	outwardNormal := Vec3{0, 0, 1}
+	rec.setFaceNormal(r, outwardNormal)
+
+	rec.mat = rect.mat
+	rec.p = r.At(t)
+
+	return &rec, true
+}
+
+type xzRect struct {
+	mat               material
+	x0, x1, z0, z1, k float64
+}
+
+func (rect *xzRect) boundingBox(time0 float64, time1 float64) (outputBox aabb, exists bool) {
+	outputBox = aabb{Point3{rect.x0, rect.k - 0.0001, rect.z0}, Point3{rect.x1, rect.k + 0.0001, rect.z1}}
+	return outputBox, true
+}
+
+func (rect *xzRect) hit(r *ray, tMin float64, tMax float64) (*hitRecord, bool) {
+
+	t := (rect.k - r.origin.Y()) / r.direction.Y()
+	if t < tMin || t > tMax {
+		return nil, false
+	}
+
+	x := r.origin.X() + t*r.direction.X()
+	z := r.origin.Z() + t*r.direction.Z()
+
+	if x < rect.x0 || x > rect.x1 || z < rect.z0 || z > rect.z1 {
+		return nil, false
+	}
+
+	var rec hitRecord
+
+	rec.u = (x - rect.x0) / (rect.x1 - rect.x0)
+	rec.v = (z - rect.z0) / (rect.z1 - rect.z0)
+	rec.t = t
+
+	outwardNormal := Vec3{0, 1, 0}
+	rec.setFaceNormal(r, outwardNormal)
+
+	rec.mat = rect.mat
+	rec.p = r.At(t)
+
+	return &rec, true
+}
+
+type yzRect struct {
+	mat               material
+	y0, y1, z0, z1, k float64
+}
+
+func (rect *yzRect) boundingBox(time0 float64, time1 float64) (outputBox aabb, exists bool) {
+	outputBox = aabb{Point3{rect.k - 0.0001, rect.y0, rect.z0}, Point3{rect.k + 0.0001, rect.y1, rect.z1}}
+	return outputBox, true
+}
+
+func (rect *yzRect) hit(r *ray, tMin float64, tMax float64) (*hitRecord, bool) {
+
+	t := (rect.k - r.origin.X()) / r.direction.X()
+	if t < tMin || t > tMax {
+		return nil, false
+	}
+
+	y := r.origin.Y() + t*r.direction.Y()
+	z := r.origin.Z() + t*r.direction.Z()
+
+	if y < rect.y0 || y > rect.y1 || z < rect.z0 || z > rect.z1 {
+		return nil, false
+	}
+
+	var rec hitRecord
+
+	rec.u = (y - rect.y0) / (rect.y1 - rect.y0)
+	rec.v = (z - rect.z0) / (rect.z1 - rect.z0)
+	rec.t = t
+
+	outwardNormal := Vec3{1, 0, 0}
+	rec.setFaceNormal(r, outwardNormal)
+
+	rec.mat = rect.mat
+	rec.p = r.At(t)
+
+	return &rec, true
 }

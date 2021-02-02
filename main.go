@@ -41,7 +41,7 @@ func main() {
 	vfov := 40.0
 	aperture := 0.0
 
-	switch 4 {
+	switch 1 {
 	case 1:
 		world = randomScene()
 		opts.background = Color3{0.7, 0.8, 1.00}
@@ -77,31 +77,51 @@ func main() {
 		lookAt = Point3{0, 0, 0}
 		vfov = 20
 	case 5:
-		opts.background = Color3{0, 0, 0.0}
+		world = simpleLight()
+		opts.samplesPerPixel = 50
+		opts.background = Color3{0, 0, 0}
+
+		//Camera
+		lookFrom = Point3{26, 3, 6}
+		lookAt = Point3{0, 2, 0}
+		vfov = 20
+	case 6:
+		world = cornellBox()
+		opts.aspectRatio = 1.0
+		opts.imageWidth = 600
+		opts.imageHeight = int(float64(opts.imageWidth) / opts.aspectRatio)
+		opts.samplesPerPixel = 50
+		opts.background = Color3{0, 0, 0}
+
+		//Camera
+		lookFrom = Point3{278, 278, -800}
+		lookAt = Point3{278, 278, 0}
+		vfov = 40
+
 	}
 
 	// World/Camera
 
 	up := Vec3{0, 1, 0}
 	distToFocus := 10.0 //lookAt.Sub(lookFrom).Length()
-	c := initCamera(lookFrom, lookAt, up, vfov, aspectRatio, aperture, distToFocus, 0.0, 1.0)
+	c := initCamera(lookFrom, lookAt, up, vfov, opts.aspectRatio, aperture, distToFocus, 0.0, 1.0)
 
 	//Render
 
 	t0 := time.Now()
 
 	upLeft := image.Point{0, 0}
-	lowRight := image.Point{imageWidth - 1, imageHeight - 1}
+	lowRight := image.Point{opts.imageWidth - 1, opts.imageHeight - 1}
 
 	img := image.NewRGBA(image.Rectangle{upLeft, lowRight})
 
 	// Set color for each pixel.
 	wg := sync.WaitGroup{}
-	for y := imageHeight - 1; y >= 0; y-- {
+	for y := opts.imageHeight - 1; y >= 0; y-- {
 		//Draw each pixel of line
 		go func(row int) {
 			wg.Add(1)
-			for x := 0; x < imageWidth; x++ {
+			for x := 0; x < opts.imageWidth; x++ {
 				ch := make(chan Color3, opts.samplesPerPixel)
 
 				pixelColor := Color3{0, 0, 0}
@@ -111,10 +131,10 @@ func main() {
 					pixelColor = pixelColor.Add(<-ch)
 				}
 				// Colors are defined by Red, Green, Blue, Alpha uint8 values.
-				img.Set(x, imageHeight-row, Color3ToRGBA(pixelColor, opts.samplesPerPixel))
+				img.Set(x, opts.imageHeight-row, Color3ToRGBA(pixelColor, opts.samplesPerPixel))
 			}
 			//Maybe change later
-			fmt.Printf("%d/%d lines\n", imageHeight-row, imageHeight)
+			fmt.Printf("%d/%d lines\n", opts.imageHeight-row, opts.imageHeight)
 			wg.Done()
 		}(y)
 	}

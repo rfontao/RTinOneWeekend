@@ -22,7 +22,7 @@ func threeBallScene() hittable {
 	world.Add(&sphere{Point3{-1, 0, -1}, -0.4, materialLeft}) //TGlass ball
 	world.Add(&sphere{Point3{1, 0, -1}, 0.5, materialRight})
 
-	return newBvhNode(world.objects, 0, len(world.objects), 0.0, 1.0)
+	return newBvhNode(world.objects, 0.0, 1.0)
 }
 
 func testWideViewScene() hittable {
@@ -36,7 +36,7 @@ func testWideViewScene() hittable {
 	world.Add(&sphere{Point3{-R, 0, -1}, R, materialLeft})
 	world.Add(&sphere{Point3{R, 0, -1}, R, materialRight})
 
-	return newBvhNode(world.objects, 0, len(world.objects), 0.0, 1.0)
+	return newBvhNode(world.objects, 0.0, 1.0)
 }
 
 func randomScene() hittable {
@@ -82,7 +82,7 @@ func randomScene() hittable {
 	material3 := metal{Color3{0.7, 0.6, 0.5}, 0.0}
 	world.Add(&sphere{Point3{4, 1, 0}, 1.0, material3})
 
-	return newBvhNode(world.objects, 0, len(world.objects), 0.0, 1.0)
+	return newBvhNode(world.objects, 0.0, 1.0)
 
 }
 
@@ -131,7 +131,7 @@ func randomSceneMoving() hittable {
 	material3 := metal{Color3{0.7, 0.6, 0.5}, 0.0}
 	world.Add(&sphere{Point3{4, 1, 0}, 1.0, material3})
 
-	return newBvhNode(world.objects, 0, len(world.objects), 0.0, 1.0)
+	return newBvhNode(world.objects, 0.0, 1.0)
 
 }
 
@@ -143,7 +143,7 @@ func twoSpheres() hittable {
 	world.Add(&sphere{Point3{0, -10, 0}, 10, checker})
 	world.Add(&sphere{Point3{0, 10, 0}, 10, checker})
 
-	return newBvhNode(world.objects, 0, len(world.objects), 0.0, 1.0)
+	return newBvhNode(world.objects, 0.0, 1.0)
 }
 
 func twoPerlinSpheres() hittable {
@@ -154,7 +154,7 @@ func twoPerlinSpheres() hittable {
 	world.Add(&sphere{Point3{0, -1000, 0}, 1000, noise})
 	world.Add(&sphere{Point3{0, 2, 0}, 2, noise})
 
-	return newBvhNode(world.objects, 0, len(world.objects), 0.0, 1.0)
+	return newBvhNode(world.objects, 0.0, 1.0)
 }
 
 func imageTextureTest() hittable {
@@ -165,5 +165,37 @@ func imageTextureTest() hittable {
 
 	world.Add(&sphere{Point3{0, 0, 0}, 2, imTex})
 
-	return newBvhNode(world.objects, 0, len(world.objects), 0.0, 1.0)
+	return newBvhNode(world.objects, 0.0, 1.0)
+}
+
+func simpleLight() hittable {
+	var world hittableList
+
+	noise := lambertian{noiseTexture{newPerlin(), 4}}
+
+	world.Add(&sphere{Point3{0, -1000, 0}, 1000, noise})
+	world.Add(&sphere{Point3{0, 2, 0}, 2, noise})
+
+	diffLight := diffuseLight{solidColor{Color3{4, 4, 4}}}
+	world.Add(&xyRect{diffLight, 3, 5, 1, 3, -2})
+
+	return newBvhNode(world.objects, 0.0, 1.0)
+}
+
+func cornellBox() hittable {
+	var world hittableList
+
+	red := lambertian{solidColor{Color3{0.65, 0.05, 0.05}}}
+	white := lambertian{solidColor{Color3{0.73, 0.73, 0.73}}}
+	green := lambertian{solidColor{Color3{0.12, 0.45, 0.15}}}
+	light := diffuseLight{solidColor{Color3{15, 15, 15}}}
+
+	world.Add(&yzRect{green, 0, 555, 0, 555, 555})
+	world.Add(&yzRect{red, 0, 555, 0, 555, 0})
+	world.Add(&xzRect{light, 213, 343, 227, 332, 554})
+	world.Add(&xzRect{white, 0, 555, 0, 555, 0})
+	world.Add(&xzRect{white, 0, 555, 0, 555, 555})
+	world.Add(&xyRect{white, 0, 555, 0, 555, 555})
+
+	return newBvhNode(world.objects, 0.0, 1.0)
 }
