@@ -38,7 +38,7 @@ func main() {
 	vfov := 40.0
 	aperture := 0.0
 
-	switch 3 {
+	switch 4 {
 	case 1:
 		world = randomScene()
 
@@ -62,7 +62,15 @@ func main() {
 		lookFrom = Point3{13, 2, 3}
 		lookAt = Point3{0, 0, 0}
 		vfov = 20
+	case 4:
+		world = imageTextureTest()
+
+		//Camera
+		lookFrom = Point3{13, 2, 3}
+		lookAt = Point3{0, 0, 0}
+		vfov = 20
 	}
+
 	// World/Camera
 
 	up := Vec3{0, 1, 0}
@@ -104,7 +112,7 @@ func main() {
 	wg.Wait()
 
 	// Encode as PNG.
-	f, _ := os.Create("images/a.png")
+	f, _ := os.Create("images/out.png")
 	png.Encode(f, img)
 
 	t1 := time.Now()

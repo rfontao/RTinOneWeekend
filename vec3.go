@@ -179,3 +179,27 @@ func Color3ToRGBA(c Color3, samplesPerPixel int) color.RGBA {
 		uint8(256.0 * Clamp(b, 0.0, 0.999)),
 		0xff}
 }
+
+//RGBAToColor3 .
+func RGBAToColor3(c color.Color) Color3 {
+
+	const rgbMax float64 = 255.0
+
+	r, g, b, _ := c.RGBA()
+
+	return Color3{float64(r>>8) / rgbMax, float64(g>>8) / rgbMax, float64(b>>8) / rgbMax}
+
+	// r := c.X()
+	// g := c.Y()
+	// b := c.Z()
+
+	// scale := 1.0 / float64(samplesPerPixel)
+	// r = math.Sqrt(scale * r)
+	// g = math.Sqrt(scale * g)
+	// b = math.Sqrt(scale * b)
+
+	// return color.RGBA{uint8(256.0 * Clamp(r, 0.0, 0.999)),
+	// 	uint8(256.0 * Clamp(g, 0.0, 0.999)),
+	// 	uint8(256.0 * Clamp(b, 0.0, 0.999)),
+	// 	0xff}
+}

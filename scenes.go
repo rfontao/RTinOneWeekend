@@ -156,3 +156,14 @@ func twoPerlinSpheres() hittable {
 
 	return newBvhNode(world.objects, 0, len(world.objects), 0.0, 1.0)
 }
+
+func imageTextureTest() hittable {
+	var world hittableList
+
+	// imTex := lambertian{newImageTexture("unknown.png")}
+	imTex := lambertian{newImageTexture("earthmap.jpg")}
+
+	world.Add(&sphere{Point3{0, 0, 0}, 2, imTex})
+
+	return newBvhNode(world.objects, 0, len(world.objects), 0.0, 1.0)
+}
