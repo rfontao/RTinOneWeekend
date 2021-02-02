@@ -13,23 +13,22 @@ func (r *ray) At(t float64) Point3 {
 }
 
 //"Background" color (colors can be changed)
-func (r *ray) RayColor(world hittable, maxDepth int, rnd *rand.Rand) Color3 {
+func (r *ray) RayColor(world hittable, background Color3, maxDepth int, rnd *rand.Rand) Color3 {
 	if maxDepth <= 0 {
 		//No more light gathered
 		return Color3{0, 0, 0}
 	}
 
 	rec, hit := world.hit(r, 0.001, infinity)
-	if hit {
-
-		scattered, attenuation, scatter := rec.mat.scatter(r, rec, rnd)
-		// attenuation.Print()
-		if scatter {
-			return attenuation.MultEach(scattered.RayColor(world, maxDepth-1, rnd))
-		}
-		return Color3{0, 0, 0}
+	if !hit {
+		return background
 	}
 
-	t := 0.5 * (r.direction.Normalize().Y() + 1.0)
-	return Lerp(Color3{1.0, 1.0, 1.0}, Color3{0.5, 0.7, 1.0}, t)
+	emitted := rec.mat.emitted(rec.u, rec.v, rec.p)
+	scattered, attenuation, scatter := rec.mat.scatter(r, rec, rnd)
+	// attenuation.Print()
+	if !scatter {
+		return emitted
+	}
+	return emitted.Add(attenuation.MultEach(scattered.RayColor(world, background, maxDepth-1, rnd)))
 }

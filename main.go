@@ -16,6 +16,7 @@ type options struct {
 	imageHeight     int
 	samplesPerPixel int
 	maxDepth        int
+	background      Color3
 }
 
 func main() {
@@ -31,9 +32,11 @@ func main() {
 		imageHeight:     imageHeight,
 		samplesPerPixel: 50,
 		maxDepth:        25,
+		background:      Color3{0, 0, 0},
 	}
 
 	var world hittable
+
 	var lookAt, lookFrom Point3
 	vfov := 40.0
 	aperture := 0.0
@@ -41,6 +44,7 @@ func main() {
 	switch 4 {
 	case 1:
 		world = randomScene()
+		opts.background = Color3{0.7, 0.8, 1.00}
 
 		//Camera
 		lookFrom = Point3{13, 2, 3}
@@ -49,6 +53,7 @@ func main() {
 		vfov = 20
 	case 2:
 		world = twoSpheres()
+		opts.background = Color3{0.7, 0.8, 1.00}
 
 		//Camera
 		lookFrom = Point3{13, 2, 3}
@@ -57,6 +62,7 @@ func main() {
 		vfov = 20
 	case 3:
 		world = twoPerlinSpheres()
+		opts.background = Color3{0.7, 0.8, 1.00}
 
 		//Camera
 		lookFrom = Point3{13, 2, 3}
@@ -64,11 +70,14 @@ func main() {
 		vfov = 20
 	case 4:
 		world = imageTextureTest()
+		opts.background = Color3{0.7, 0.8, 1.00}
 
 		//Camera
 		lookFrom = Point3{13, 2, 3}
 		lookAt = Point3{0, 0, 0}
 		vfov = 20
+	case 5:
+		opts.background = Color3{0, 0, 0.0}
 	}
 
 	// World/Camera
@@ -131,7 +140,7 @@ func sendRays(world hittable, c *camera, x int, y int, opts *options, ch chan Co
 			v := (float64(y) + RandomDouble(rnd)) / float64(opts.imageHeight-1)
 
 			currentRay := c.getRay(u, v, rnd)
-			rayColor := currentRay.RayColor(world, opts.maxDepth, rnd)
+			rayColor := currentRay.RayColor(world, opts.background, opts.maxDepth, rnd)
 			// pixelColor = pixelColor.Add(rayColor)
 			ch <- rayColor
 		}()

@@ -7,6 +7,7 @@ import (
 
 type material interface {
 	scatter(rayIn *ray, rec *hitRecord, rnd *rand.Rand) (scattered *ray, attenuation *Color3, scatter bool)
+	emitted(u float64, v float64, p Point3) Color3
 }
 
 type lambertian struct {
@@ -26,6 +27,10 @@ func (lamb lambertian) scatter(rayIn *ray, rec *hitRecord, rnd *rand.Rand) (scat
 	return scattered, &at, true
 }
 
+func (lamb lambertian) emitted(u float64, v float64, p Point3) Color3 {
+	return Color3{0, 0, 0}
+}
+
 type metal struct {
 	albedo Color3
 	fuzz   float64 //Radius of sphere
@@ -38,6 +43,10 @@ func (m metal) scatter(rayIn *ray, rec *hitRecord, rnd *rand.Rand) (scattered *r
 	scattered = &ray{rec.p, Reflected.Add(RandomInUnitSphere(rnd).Mult(m.fuzz)), rayIn.time}
 	attenuation = &m.albedo
 	return scattered, attenuation, scattered.direction.Dot(rec.normal) > 0
+}
+
+func (m metal) emitted(u float64, v float64, p Point3) Color3 {
+	return Color3{0, 0, 0}
 }
 
 type dielectric struct {
@@ -73,8 +82,24 @@ func (m dielectric) scatter(rayIn *ray, rec *hitRecord, rnd *rand.Rand) (scatter
 	return scattered, attenuation, true
 }
 
+func (m dielectric) emitted(u float64, v float64, p Point3) Color3 {
+	return Color3{0, 0, 0}
+}
+
 func reflectance(cosine float64, refIndex float64) float64 {
 	// Use Schlick's approximation for Reflectance.
 	r0 := math.Pow((1.0-refIndex)/(1.0+refIndex), 2)
 	return r0 + (1.0-r0)*math.Pow(1.0-cosine, 5)
+}
+
+type diffuseLight struct {
+	emit texture
+}
+
+func (m diffuseLight) scatter(rayIn *ray, rec *hitRecord, rnd *rand.Rand) (scattered *ray, attenuation *Color3, scatter bool) {
+	return nil, nil, false
+}
+
+func (m diffuseLight) emitted(u float64, v float64, p Point3) Color3 {
+	return m.emit.value(u, v, p)
 }
