@@ -31,7 +31,7 @@ func main() {
 		imageWidth:      imageWidth,
 		imageHeight:     imageHeight,
 		samplesPerPixel: 50,
-		maxDepth:        25,
+		maxDepth:        40,
 		background:      Color3{0, 0, 0},
 	}
 
@@ -41,7 +41,7 @@ func main() {
 	vfov := 40.0
 	aperture := 0.0
 
-	switch 1 {
+	switch 8 {
 	case 1:
 		world = randomScene()
 		opts.background = Color3{0.7, 0.8, 1.00}
@@ -98,6 +98,31 @@ func main() {
 		lookAt = Point3{278, 278, 0}
 		vfov = 40
 
+	case 7:
+		world = cornellSmoke()
+		opts.aspectRatio = 1.0
+		opts.imageWidth = 600
+		opts.imageHeight = int(float64(opts.imageWidth) / opts.aspectRatio)
+		opts.samplesPerPixel = 50
+		opts.background = Color3{0, 0, 0}
+
+		//Camera
+		lookFrom = Point3{278, 278, -800}
+		lookAt = Point3{278, 278, 0}
+		vfov = 40
+
+	case 8:
+		world = finalScene()
+		opts.aspectRatio = 1.0
+		opts.imageWidth = 800
+		opts.imageHeight = int(float64(opts.imageWidth) / opts.aspectRatio)
+		opts.samplesPerPixel = 10
+		opts.background = Color3{0, 0, 0}
+
+		//Camera
+		lookFrom = Point3{478, 278, -600}
+		lookAt = Point3{278, 278, 0}
+		vfov = 40
 	}
 
 	// World/Camera

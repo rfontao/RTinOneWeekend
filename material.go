@@ -103,3 +103,17 @@ func (m diffuseLight) scatter(rayIn *ray, rec *hitRecord, rnd *rand.Rand) (scatt
 func (m diffuseLight) emitted(u float64, v float64, p Point3) Color3 {
 	return m.emit.value(u, v, p)
 }
+
+type isotropic struct {
+	albedo texture
+}
+
+func (m isotropic) scatter(rayIn *ray, rec *hitRecord, rnd *rand.Rand) (scattered *ray, attenuation *Color3, scatter bool) {
+	s := ray{rec.p, RandomInUnitSphere(rnd), rayIn.time}
+	a := m.albedo.value(rec.u, rec.v, rec.p)
+	return &s, &a, true
+}
+
+func (m isotropic) emitted(u float64, v float64, p Point3) Color3 {
+	return Color3{0, 0, 0}
+}

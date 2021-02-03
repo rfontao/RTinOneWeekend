@@ -517,3 +517,204 @@ func (rect *yzRect) hit(r *ray, tMin float64, tMax float64) (*hitRecord, bool) {
 
 	return &rec, true
 }
+
+type box struct {
+	boxMin, boxMax Point3
+	sides          hittableList
+}
+
+func newBox(p0 Point3, p1 Point3, mat material) *box {
+	var b box
+	b.boxMin = p0
+	b.boxMax = p1
+
+	b.sides.Add(&xyRect{mat, p0.X(), p1.X(), p0.Y(), p1.Y(), p1.Z()})
+	b.sides.Add(&xyRect{mat, p0.X(), p1.X(), p0.Y(), p1.Y(), p0.Z()})
+
+	b.sides.Add(&xzRect{mat, p0.X(), p1.X(), p0.Z(), p1.Z(), p1.Y()})
+	b.sides.Add(&xzRect{mat, p0.X(), p1.X(), p0.Z(), p1.Z(), p0.Y()})
+
+	b.sides.Add(&yzRect{mat, p0.Y(), p1.Y(), p0.Z(), p1.Z(), p1.X()})
+	b.sides.Add(&yzRect{mat, p0.Y(), p1.Y(), p0.Z(), p1.Z(), p0.X()})
+
+	return &b
+}
+
+func (b *box) boundingBox(time0 float64, time1 float64) (outputBox aabb, exists bool) {
+	outputBox = aabb{b.boxMin, b.boxMax}
+	return outputBox, true
+}
+
+func (b *box) hit(r *ray, tMin float64, tMax float64) (*hitRecord, bool) {
+
+	return b.sides.hit(r, tMin, tMax)
+}
+
+type translate struct {
+	obj    hittable
+	offset Vec3
+}
+
+func (t *translate) boundingBox(time0 float64, time1 float64) (outputBox aabb, exists bool) {
+	outputBox, exists = t.obj.boundingBox(time0, time1)
+	if !exists {
+		return outputBox, false
+	}
+
+	outputBox = aabb{
+		outputBox.minimum.Add(t.offset),
+		outputBox.maximum.Add(t.offset),
+	}
+
+	return outputBox, true
+}
+
+func (t *translate) hit(r *ray, tMin float64, tMax float64) (*hitRecord, bool) {
+
+	newRay := ray{r.origin.Sub(t.offset), r.direction, r.time}
+	rec, hit := t.obj.hit(&newRay, tMin, tMax)
+	if !hit {
+		return nil, false
+	}
+
+	rec.p = rec.p.Add(t.offset)
+	rec.setFaceNormal(&newRay, rec.normal)
+
+	return rec, true
+}
+
+type rotateY struct {
+	obj                hittable
+	sinTheta, cosTheta float64
+	hasBox             bool
+	box                aabb
+}
+
+func newRotateY(obj hittable, angle float64) *rotateY {
+
+	var rot rotateY
+	rot.obj = obj
+	radians := DegToRad(angle)
+	rot.sinTheta = math.Sin(radians)
+	rot.cosTheta = math.Cos(radians)
+	rot.box, rot.hasBox = obj.boundingBox(0, 1)
+
+	min := Point3{infinity, infinity, infinity}
+	max := Point3{-infinity, -infinity, -infinity}
+
+	for i := 0; i < 2; i++ {
+		for j := 0; j < 2; j++ {
+			for k := 0; k < 2; k++ {
+				x := float64(i)*rot.box.maximum.X() + float64(1-i)*rot.box.minimum.X()
+				y := float64(j)*rot.box.maximum.Y() + float64(1-j)*rot.box.minimum.Y()
+				z := float64(k)*rot.box.maximum.Z() + float64(1-k)*rot.box.minimum.Z()
+
+				newX := rot.cosTheta*x + rot.sinTheta*z
+				newZ := -rot.sinTheta*x + rot.cosTheta*z
+
+				tester := Vec3{newX, y, newZ}
+
+				for c := 0; c < 3; c++ {
+					min[c] = math.Min(min[c], tester[c])
+					max[c] = math.Max(max[c], tester[c])
+				}
+			}
+		}
+	}
+
+	rot.box = aabb{min, max}
+
+	return &rot
+}
+
+func (rot *rotateY) boundingBox(time0 float64, time1 float64) (outputBox aabb, exists bool) {
+	return rot.box, rot.hasBox
+}
+
+func (rot *rotateY) hit(r *ray, tMin float64, tMax float64) (*hitRecord, bool) {
+
+	origin := r.origin
+	direction := r.direction
+
+	origin[0] = rot.cosTheta*r.origin[0] - rot.sinTheta*r.origin[2]
+	origin[2] = rot.sinTheta*r.origin[0] + rot.cosTheta*r.origin[2]
+
+	direction[0] = rot.cosTheta*r.direction[0] - rot.sinTheta*r.direction[2]
+	direction[2] = rot.sinTheta*r.direction[0] + rot.cosTheta*r.direction[2]
+
+	rotatedRay := ray{origin, direction, r.time}
+
+	rec, hit := rot.obj.hit(&rotatedRay, tMin, tMax)
+	if !hit {
+		return nil, false
+	}
+
+	rec.p[0] = rot.cosTheta*rec.p[0] + rot.sinTheta*rec.p[2]
+	rec.p[2] = -rot.sinTheta*rec.p[0] + rot.cosTheta*rec.p[2]
+
+	rec.normal[0] = rot.cosTheta*rec.normal[0] + rot.sinTheta*rec.normal[2]
+	rec.normal[2] = -rot.sinTheta*rec.normal[0] + rot.cosTheta*rec.normal[2]
+
+	rec.setFaceNormal(&rotatedRay, rec.normal)
+
+	return rec, true
+}
+
+type constantMedium struct {
+	boundary      hittable
+	phaseFunction material
+	negInvDensity float64
+}
+
+func newConstantMedium(obj hittable, density float64, tex texture) *constantMedium {
+	return &constantMedium{obj, isotropic{tex}, -1 / density}
+}
+
+func (m *constantMedium) boundingBox(time0 float64, time1 float64) (outputBox aabb, exists bool) {
+	return m.boundary.boundingBox(time0, time1)
+}
+
+func (m *constantMedium) hit(r *ray, tMin float64, tMax float64) (*hitRecord, bool) {
+
+	rec1, hit1 := m.boundary.hit(r, -infinity, infinity)
+	if !hit1 {
+		return nil, false
+	}
+
+	rec2, hit2 := m.boundary.hit(r, rec1.t+0.0001, infinity)
+	if !hit2 {
+		return nil, false
+	}
+
+	if rec1.t < tMin {
+		rec1.t = tMin
+	}
+	if rec2.t > tMax {
+		rec2.t = tMax
+	}
+
+	if rec1.t >= rec2.t {
+		return nil, false
+	}
+
+	if rec1.t < 0 {
+		rec1.t = 0
+	}
+
+	rayLength := r.direction.Length()
+	distanceInsideBoundary := (rec2.t - rec1.t) * rayLength
+	hitDistance := m.negInvDensity * math.Log(rand.Float64())
+
+	if hitDistance > distanceInsideBoundary {
+		return nil, false
+	}
+
+	var rec hitRecord
+	rec.t = rec1.t + hitDistance/rayLength
+	rec.p = r.At(rec.t)
+	rec.normal = Vec3{1, 0, 0} //arbitrary
+	rec.frontFace = true       //arbitrary
+	rec.mat = m.phaseFunction
+
+	return &rec, true
+}
