@@ -276,7 +276,7 @@ func finalScene() hittable {
 	objects.Add(&boundary)
 	objects.Add(newConstantMedium(&boundary, 0.2, solidColor{Color3{0.2, 0.4, 0.9}}))
 	boundary = sphere{Point3{0, 0, 0}, 5000, dielectric{1.5}}
-	objects.Add(newConstantMedium(&boundary, 0.0001, solidColor{Color3{1, 1, 1}}))
+	objects.Add(newConstantMedium(&boundary, 1000, solidColor{Color3{1, 1, 1}}))
 
 	emat := lambertian{newImageTexture("earthmap.jpg")}
 	objects.Add(&sphere{Point3{400, 200, 400}, 100, emat})
@@ -292,8 +292,7 @@ func finalScene() hittable {
 
 	objects.Add(&translate{
 		newRotateY(
-			newBvhNode(boxes2.objects, 0, 1), 15,
-		),
+			newBvhNode(boxes2.objects, 0, 1), 15),
 		Vec3{-100, 270, 395},
 	})
 

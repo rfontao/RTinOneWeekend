@@ -116,7 +116,7 @@ func main() {
 		opts.aspectRatio = 1.0
 		opts.imageWidth = 800
 		opts.imageHeight = int(float64(opts.imageWidth) / opts.aspectRatio)
-		opts.samplesPerPixel = 10
+		opts.samplesPerPixel = 300
 		opts.background = Color3{0, 0, 0}
 
 		//Camera

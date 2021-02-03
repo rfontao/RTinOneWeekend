@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"math"
 	"math/rand"
 	"sort"
@@ -712,6 +713,12 @@ func (m *constantMedium) hit(r *ray, tMin float64, tMax float64) (*hitRecord, bo
 	var rec hitRecord
 	rec.t = rec1.t + hitDistance/rayLength
 	rec.p = r.At(rec.t)
+
+	if rand.Float64() < 0.00001 {
+		fmt.Printf("hitDistance: %f\nrec.t: %f\n", hitDistance, rec.t)
+		rec.p.Print()
+	}
+
 	rec.normal = Vec3{1, 0, 0} //arbitrary
 	rec.frontFace = true       //arbitrary
 	rec.mat = m.phaseFunction
