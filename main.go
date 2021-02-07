@@ -41,7 +41,7 @@ func main() {
 	vfov := 40.0
 	aperture := 0.0
 
-	switch 8 {
+	switch 1 {
 	case 1:
 		world = randomScene()
 		opts.background = Color3{0.7, 0.8, 1.00}

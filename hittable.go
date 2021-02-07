@@ -226,89 +226,15 @@ func (list *hittableList) boundingBox(time0 float64, time1 float64) (outputBox a
 	return outputBox, true
 }
 
-type By func(h1 hittable, h2 hittable) bool
-
-func (by By) Sort(l []hittable) {
-	hs := &hittableSorter{
-		hittables: l,
-		by:        by, // The Sort method's receiver is the function (closure) that defines the sort order.
-	}
-	sort.Sort(hs)
-}
-
 type hittableSorter struct {
 	hittables []hittable
 	by        func(h1 hittable, h2 hittable) bool
-}
-
-func (s *hittableSorter) Len() int { return len(s.hittables) }
-func (s *hittableSorter) Swap(i, j int) {
-	s.hittables[i], s.hittables[j] = s.hittables[j], s.hittables[i]
-}
-func (s *hittableSorter) Less(i, j int) bool {
-	return s.by(s.hittables[i], s.hittables[j])
 }
 
 type bvhNode struct {
 	left, right hittable
 	box         aabb
 }
-
-//Old sort was wrong (needed to sort only from start to end)
-// func newBvhNode(list []hittable, start int, end int, time0 float64, time1 float64) *bvhNode {
-// 	objs := list
-
-// 	var bvh bvhNode
-
-// 	axis := rand.Intn(2 + 1)
-
-// 	comparator := []By{
-// 		//X axis
-// 		func(h1 hittable, h2 hittable) bool {
-// 			return boxCompare(h1, h2, 0)
-// 		},
-// 		//Y axis
-// 		func(h1 hittable, h2 hittable) bool {
-// 			return boxCompare(h1, h2, 1)
-// 		},
-// 		//Z axis
-// 		func(h1 hittable, h2 hittable) bool {
-// 			return boxCompare(h1, h2, 2)
-// 		},
-// 	}[axis]
-
-// 	objectSpan := end - start
-
-// 	if objectSpan == 1 {
-// 		bvh.right = objs[start]
-// 		bvh.left = objs[start]
-// 	} else if objectSpan == 2 {
-// 		if comparator(objs[start], objs[start+1]) {
-// 			bvh.left = objs[start]
-// 			bvh.right = objs[start+1]
-// 		} else {
-// 			bvh.left = objs[start+1]
-// 			bvh.right = objs[start]
-// 		}
-// 	} else {
-// 		//only part of list
-// 		comparator.Sort(objs)
-
-// 		mid := start + objectSpan/2
-// 		bvh.left = newBvhNode(objs, start, mid, time0, time1)
-// 		bvh.right = newBvhNode(objs, mid, end, time0, time1)
-// 	}
-
-// 	boxLeft, existsLeft := bvh.left.boundingBox(time0, time1)
-// 	boxRight, existsRight := bvh.right.boundingBox(time0, time1)
-
-// 	if !existsLeft || !existsRight {
-// 		panic("No bounding box in bvhnode constructor")
-// 	}
-
-// 	bvh.box = surroundingBox(boxLeft, boxRight)
-// 	return &bvh
-// }
 
 func newBvhNode(list []hittable, time0 float64, time1 float64) *bvhNode {
 	objs := list
@@ -317,37 +243,17 @@ func newBvhNode(list []hittable, time0 float64, time1 float64) *bvhNode {
 
 	axis := rand.Intn(2 + 1)
 
-	comparator := []By{
-		//X axis
-		func(h1 hittable, h2 hittable) bool {
-			return boxCompare(h1, h2, 0)
-		},
-		//Y axis
-		func(h1 hittable, h2 hittable) bool {
-			return boxCompare(h1, h2, 1)
-		},
-		//Z axis
-		func(h1 hittable, h2 hittable) bool {
-			return boxCompare(h1, h2, 2)
-		},
-	}[axis]
-
 	objectSpan := len(objs)
 
 	if objectSpan == 1 {
 		bvh.right = objs[0]
 		bvh.left = objs[0]
-	} else if objectSpan == 2 {
-		if comparator(objs[0], objs[01]) {
-			bvh.left = objs[0]
-			bvh.right = objs[1]
-		} else {
-			bvh.left = objs[1]
-			bvh.right = objs[0]
-		}
 	} else {
 		//only part of list
-		comparator.Sort(objs)
+		// comparator.Sort(objs)
+		sort.Slice(objs, func(h1, h2 int) bool {
+			return boxCompare(objs[h1], objs[h2], axis)
+		})
 
 		mid := objectSpan / 2
 		bvh.left = newBvhNode(objs[:mid], time0, time1)
