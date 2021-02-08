@@ -41,7 +41,9 @@ func main() {
 	vfov := 40.0
 	aperture := 0.0
 
-	switch 1 {
+	var lights hittable = &xzRect{lambertian{}, 213, 343, 227, 332, 554}
+
+	switch 6 {
 	case 1:
 		world = randomScene()
 		opts.background = Color3{0.7, 0.8, 1.00}
@@ -86,11 +88,13 @@ func main() {
 		lookAt = Point3{0, 2, 0}
 		vfov = 20
 	case 6:
+		//next week chapter 6.11 -> 2min
 		world = cornellBox()
 		opts.aspectRatio = 1.0
 		opts.imageWidth = 600
 		opts.imageHeight = int(float64(opts.imageWidth) / opts.aspectRatio)
-		opts.samplesPerPixel = 50
+		opts.samplesPerPixel = 100
+		opts.maxDepth = 50
 		opts.background = Color3{0, 0, 0}
 
 		//Camera
@@ -150,7 +154,7 @@ func main() {
 				ch := make(chan Color3, opts.samplesPerPixel)
 
 				pixelColor := Color3{0, 0, 0}
-				sendRays(world, &c, x, row, &opts, ch)
+				sendRays(world, &c, x, row, &opts, ch, lights)
 
 				for i := 0; i < opts.samplesPerPixel; i++ {
 					pixelColor = pixelColor.Add(<-ch)
@@ -173,7 +177,7 @@ func main() {
 	fmt.Printf("The call took %v to run.\n", t1.Sub(t0))
 }
 
-func sendRays(world hittable, c *camera, x int, y int, opts *options, ch chan Color3) {
+func sendRays(world hittable, c *camera, x int, y int, opts *options, ch chan Color3, lights hittable) {
 
 	for s := 0; s < opts.samplesPerPixel; s++ {
 		go func() {
@@ -185,7 +189,7 @@ func sendRays(world hittable, c *camera, x int, y int, opts *options, ch chan Co
 			v := (float64(y) + RandomDouble(rnd)) / float64(opts.imageHeight-1)
 
 			currentRay := c.getRay(u, v, rnd)
-			rayColor := currentRay.RayColor(world, opts.background, opts.maxDepth, rnd)
+			rayColor := currentRay.RayColor(world, opts.background, opts.maxDepth, rnd, lights)
 			// pixelColor = pixelColor.Add(rayColor)
 			ch <- rayColor
 		}()

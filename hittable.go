@@ -20,6 +20,8 @@ type hitRecord struct {
 type hittable interface {
 	hit(r *ray, tMin float64, tMax float64) (*hitRecord, bool)
 	boundingBox(time0 float64, time1 float64) (aabb, bool)
+	pdfValue(o Point3, v Vec3) float64
+	random(o Vec3, rnd *rand.Rand) Vec3
 }
 
 func (rec *hitRecord) setFaceNormal(r *ray, outwardNormal Vec3) {
@@ -88,6 +90,14 @@ func (s *sphere) boundingBox(time0 float64, time1 float64) (aabb, bool) {
 		s.center.Sub(Vec3{s.radius, s.radius, s.radius}),
 		s.center.Add(Vec3{s.radius, s.radius, s.radius}),
 	}, true
+}
+
+func (s *sphere) pdfValue(o Point3, v Vec3) float64 {
+	return 0
+}
+
+func (s *sphere) random(o Vec3, rnd *rand.Rand) Vec3 {
+	return Vec3{1, 0, 0}
 }
 
 func (s *sphere) getSphereUV(p Point3) (u float64, v float64) {
@@ -177,6 +187,14 @@ func (s *movingSphere) boundingBox(time0 float64, time1 float64) (aabb, bool) {
 	return surroundingBox(box0, box1), true
 }
 
+func (s *movingSphere) pdfValue(o Point3, v Vec3) float64 {
+	return 0
+}
+
+func (s *movingSphere) random(o Vec3, rnd *rand.Rand) Vec3 {
+	return Vec3{1, 0, 0}
+}
+
 type hittableList struct {
 	objects []hittable
 }
@@ -226,9 +244,12 @@ func (list *hittableList) boundingBox(time0 float64, time1 float64) (outputBox a
 	return outputBox, true
 }
 
-type hittableSorter struct {
-	hittables []hittable
-	by        func(h1 hittable, h2 hittable) bool
+func (list *hittableList) pdfValue(o Point3, v Vec3) float64 {
+	return 0
+}
+
+func (list *hittableList) random(o Vec3, rnd *rand.Rand) Vec3 {
+	return Vec3{1, 0, 0}
 }
 
 type bvhNode struct {
@@ -292,8 +313,16 @@ func (bvh *bvhNode) hit(r *ray, tMin float64, tMax float64) (*hitRecord, bool) {
 
 }
 
-func (bvh bvhNode) boundingBox(time0 float64, time1 float64) (aabb, bool) {
+func (bvh *bvhNode) boundingBox(time0 float64, time1 float64) (aabb, bool) {
 	return bvh.box, true
+}
+
+func (bvh *bvhNode) pdfValue(o Point3, v Vec3) float64 {
+	return 0
+}
+
+func (bvh *bvhNode) random(o Vec3, rnd *rand.Rand) Vec3 {
+	return Vec3{1, 0, 0}
 }
 
 func boxCompare(a hittable, b hittable, axis int) bool {
@@ -347,6 +376,14 @@ func (rect *xyRect) hit(r *ray, tMin float64, tMax float64) (*hitRecord, bool) {
 	return &rec, true
 }
 
+func (rect *xyRect) pdfValue(o Point3, v Vec3) float64 {
+	return 0
+}
+
+func (rect *xyRect) random(o Vec3, rnd *rand.Rand) Vec3 {
+	return Vec3{1, 0, 0}
+}
+
 type xzRect struct {
 	mat               material
 	x0, x1, z0, z1, k float64
@@ -384,6 +421,24 @@ func (rect *xzRect) hit(r *ray, tMin float64, tMax float64) (*hitRecord, bool) {
 	rec.p = r.At(t)
 
 	return &rec, true
+}
+
+func (rect *xzRect) pdfValue(o Point3, v Vec3) float64 {
+	rec, hit := rect.hit(&ray{o, v, 0.0}, 0.001, infinity)
+	if !hit {
+		return 0
+	}
+
+	area := (rect.x1 - rect.x0) * (rect.z1 - rect.z0)
+	distanceSquared := rec.t * rec.t * v.LengthSquared()
+	cosine := math.Abs(v.Dot(rec.normal) / v.Length())
+
+	return distanceSquared / (cosine * area)
+}
+
+func (rect *xzRect) random(o Vec3, rnd *rand.Rand) Vec3 {
+	randomPoint := Point3{RandomDoubleRange(rect.x0, rect.x1, rnd), rect.k, RandomDoubleRange(rect.z0, rect.z1, rnd)}
+	return randomPoint.Sub(o)
 }
 
 type yzRect struct {
@@ -425,6 +480,14 @@ func (rect *yzRect) hit(r *ray, tMin float64, tMax float64) (*hitRecord, bool) {
 	return &rec, true
 }
 
+func (rect *yzRect) pdfValue(o Point3, v Vec3) float64 {
+	return 0
+}
+
+func (rect *yzRect) random(o Vec3, rnd *rand.Rand) Vec3 {
+	return Vec3{1, 0, 0}
+}
+
 type box struct {
 	boxMin, boxMax Point3
 	sides          hittableList
@@ -455,6 +518,14 @@ func (b *box) boundingBox(time0 float64, time1 float64) (outputBox aabb, exists 
 func (b *box) hit(r *ray, tMin float64, tMax float64) (*hitRecord, bool) {
 
 	return b.sides.hit(r, tMin, tMax)
+}
+
+func (b *box) pdfValue(o Point3, v Vec3) float64 {
+	return 0
+}
+
+func (b *box) random(o Vec3, rnd *rand.Rand) Vec3 {
+	return Vec3{1, 0, 0}
 }
 
 type translate struct {
@@ -490,6 +561,14 @@ func (t *translate) hit(r *ray, tMin float64, tMax float64) (*hitRecord, bool) {
 	return rec, true
 }
 
+func (t *translate) pdfValue(o Point3, v Vec3) float64 {
+	return 0
+}
+
+func (t *translate) random(o Vec3, rnd *rand.Rand) Vec3 {
+	return Vec3{1, 0, 0}
+}
+
 type rotateY struct {
 	obj                hittable
 	sinTheta, cosTheta float64
@@ -512,9 +591,9 @@ func newRotateY(obj hittable, angle float64) *rotateY {
 	for i := 0; i < 2; i++ {
 		for j := 0; j < 2; j++ {
 			for k := 0; k < 2; k++ {
-				x := float64(i)*rot.box.maximum.X() + float64(1-i)*rot.box.minimum.X()
-				y := float64(j)*rot.box.maximum.Y() + float64(1-j)*rot.box.minimum.Y()
-				z := float64(k)*rot.box.maximum.Z() + float64(1-k)*rot.box.minimum.Z()
+				x := float64(i)*rot.box.maximum.X() + (1.0-float64(i))*rot.box.minimum.X()
+				y := float64(j)*rot.box.maximum.Y() + (1.0-float64(j))*rot.box.minimum.Y()
+				z := float64(k)*rot.box.maximum.Z() + (1.0-float64(k))*rot.box.minimum.Z()
 
 				newX := rot.cosTheta*x + rot.sinTheta*z
 				newZ := -rot.sinTheta*x + rot.cosTheta*z
@@ -540,8 +619,8 @@ func (rot *rotateY) boundingBox(time0 float64, time1 float64) (outputBox aabb, e
 
 func (rot *rotateY) hit(r *ray, tMin float64, tMax float64) (*hitRecord, bool) {
 
-	origin := r.origin
-	direction := r.direction
+	origin := r.origin.Copy()
+	direction := r.direction.Copy()
 
 	origin[0] = rot.cosTheta*r.origin[0] - rot.sinTheta*r.origin[2]
 	origin[2] = rot.sinTheta*r.origin[0] + rot.cosTheta*r.origin[2]
@@ -556,15 +635,27 @@ func (rot *rotateY) hit(r *ray, tMin float64, tMax float64) (*hitRecord, bool) {
 		return nil, false
 	}
 
-	rec.p[0] = rot.cosTheta*rec.p[0] + rot.sinTheta*rec.p[2]
-	rec.p[2] = -rot.sinTheta*rec.p[0] + rot.cosTheta*rec.p[2]
+	p := rec.p.Copy()
+	normal := rec.normal.Copy()
 
-	rec.normal[0] = rot.cosTheta*rec.normal[0] + rot.sinTheta*rec.normal[2]
-	rec.normal[2] = -rot.sinTheta*rec.normal[0] + rot.cosTheta*rec.normal[2]
+	p[0] = rot.cosTheta*rec.p[0] + rot.sinTheta*rec.p[2]
+	p[2] = -rot.sinTheta*rec.p[0] + rot.cosTheta*rec.p[2]
 
-	rec.setFaceNormal(&rotatedRay, rec.normal)
+	normal[0] = rot.cosTheta*rec.normal[0] + rot.sinTheta*rec.normal[2]
+	normal[2] = -rot.sinTheta*rec.normal[0] + rot.cosTheta*rec.normal[2]
+
+	rec.p = p.Copy()
+	rec.setFaceNormal(&rotatedRay, normal)
 
 	return rec, true
+}
+
+func (rot *rotateY) pdfValue(o Point3, v Vec3) float64 {
+	return 0
+}
+
+func (rot *rotateY) random(o Vec3, rnd *rand.Rand) Vec3 {
+	return Vec3{1, 0, 0}
 }
 
 type constantMedium struct {
@@ -630,4 +721,39 @@ func (m *constantMedium) hit(r *ray, tMin float64, tMax float64) (*hitRecord, bo
 	rec.mat = m.phaseFunction
 
 	return &rec, true
+}
+
+func (m *constantMedium) pdfValue(o Point3, v Vec3) float64 {
+	return 0
+}
+
+func (m *constantMedium) random(o Vec3, rnd *rand.Rand) Vec3 {
+	return Vec3{1, 0, 0}
+}
+
+type flipFace struct {
+	obj hittable
+}
+
+func (f *flipFace) boundingBox(time0 float64, time1 float64) (outputBox aabb, exists bool) {
+	return f.obj.boundingBox(time0, time1)
+}
+
+func (f *flipFace) hit(r *ray, tMin float64, tMax float64) (*hitRecord, bool) {
+
+	rec, hit := f.obj.hit(r, tMin, tMax)
+	if !hit {
+		return nil, false
+	}
+
+	rec.frontFace = !rec.frontFace
+	return rec, true
+}
+
+func (f *flipFace) pdfValue(o Point3, v Vec3) float64 {
+	return 0
+}
+
+func (f *flipFace) random(o Vec3, rnd *rand.Rand) Vec3 {
+	return Vec3{1, 0, 0}
 }

@@ -32,3 +32,15 @@ func Clamp(x float64, min float64, max float64) float64 {
 	}
 	return x
 }
+
+func RandomCosineDirection(rnd *rand.Rand) Vec3 {
+	r1 := RandomDouble(rnd)
+	r2 := RandomDouble(rnd)
+	z := math.Sqrt(1 - r2)
+
+	phi := 2 * math.Pi * r1
+	x := math.Cos(phi) * math.Sqrt(r2)
+	y := math.Sin(phi) * math.Sqrt(r2)
+
+	return Vec3{x, y, z}
+}

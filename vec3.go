@@ -88,6 +88,10 @@ func (v Vec3) Cross(v2 Vec3) Vec3 {
 	return Vec3{v[1]*v2[2] - v[2]*v2[1], v[2]*v2[0] - v[0]*v2[2], v[0]*v2[1] - v[1]*v2[0]}
 }
 
+func (v Vec3) Copy() Vec3 {
+	return Vec3{v[0], v[1], v[2]}
+}
+
 // Lerp (1−t)⋅startValue+t⋅endValue
 func Lerp(start Vec3, end Vec3, t float64) Vec3 {
 	return start.Mult(1.0 - t).Add(end.Mult(t))

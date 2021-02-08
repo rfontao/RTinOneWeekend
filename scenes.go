@@ -192,7 +192,7 @@ func cornellBox() hittable {
 
 	world.Add(&yzRect{green, 0, 555, 0, 555, 555})
 	world.Add(&yzRect{red, 0, 555, 0, 555, 0})
-	world.Add(&xzRect{light, 213, 343, 227, 332, 554})
+	world.Add(&flipFace{&xzRect{light, 213, 343, 227, 332, 554}})
 	world.Add(&xzRect{white, 0, 555, 0, 555, 0})
 	world.Add(&xzRect{white, 0, 555, 0, 555, 555})
 	world.Add(&xyRect{white, 0, 555, 0, 555, 555})
