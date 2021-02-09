@@ -197,15 +197,19 @@ func cornellBox() hittable {
 	world.Add(&xzRect{white, 0, 555, 0, 555, 555})
 	world.Add(&xyRect{white, 0, 555, 0, 555, 555})
 
+	// aluminum := metal{Color3{0.8, 0.85, 0.88}, 0.0}
 	var box1 hittable = newBox(Point3{0, 0, 0}, Point3{165, 330, 165}, white)
 	box1 = newRotateY(box1, 15)
 	box1 = &translate{box1, Vec3{265, 0, 295}}
 	world.Add(box1)
 
-	var box2 hittable = newBox(Point3{0, 0, 0}, Point3{165, 165, 165}, white)
-	box2 = newRotateY(box2, -18)
-	box2 = &translate{box2, Vec3{130, 0, 65}}
-	world.Add(box2)
+	// var box2 hittable = newBox(Point3{0, 0, 0}, Point3{165, 165, 165}, white)
+	// box2 = newRotateY(box2, -18)
+	// box2 = &translate{box2, Vec3{130, 0, 65}}
+	// world.Add(box2)
+
+	glass := dielectric{1.5}
+	world.Add(&sphere{Point3{190, 90, 190}, 90, glass})
 
 	return newBvhNode(world.objects, 0.0, 1.0)
 }

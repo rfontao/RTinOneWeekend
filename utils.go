@@ -44,3 +44,15 @@ func RandomCosineDirection(rnd *rand.Rand) Vec3 {
 
 	return Vec3{x, y, z}
 }
+
+func RandomToSphere(radius float64, distanceSquared float64, rnd *rand.Rand) Vec3 {
+	r1 := RandomDouble(rnd)
+	r2 := RandomDouble(rnd)
+	z := 1 + r2*(math.Sqrt(1-radius*radius/distanceSquared)-1)
+
+	phi := 2 * math.Pi * r1
+	x := math.Cos(phi) * math.Sqrt(1-z*z)
+	y := math.Sin(phi) * math.Sqrt(1-z*z)
+
+	return Vec3{x, y, z}
+}

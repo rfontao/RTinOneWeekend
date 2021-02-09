@@ -173,6 +173,16 @@ func Color3ToRGBA(c Color3, samplesPerPixel int) color.RGBA {
 	g := c.Y()
 	b := c.Z()
 
+	if r != r {
+		r = 0.0
+	}
+	if g != g {
+		g = 0.0
+	}
+	if b != b {
+		b = 0.0
+	}
+
 	scale := 1.0 / float64(samplesPerPixel)
 	r = math.Sqrt(scale * r)
 	g = math.Sqrt(scale * g)

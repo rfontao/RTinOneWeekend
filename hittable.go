@@ -93,11 +93,22 @@ func (s *sphere) boundingBox(time0 float64, time1 float64) (aabb, bool) {
 }
 
 func (s *sphere) pdfValue(o Point3, v Vec3) float64 {
-	return 0
+	_, hit := s.hit(&ray{o, v, 0}, 0.001, infinity)
+	if !hit {
+		return 0
+	}
+
+	cosThetaMax := math.Sqrt(1.0 - s.radius*s.radius/(s.center.Sub(o).LengthSquared()))
+	solidAngle := 2 * math.Pi * (1.0 - cosThetaMax)
+
+	return 1.0 / solidAngle
 }
 
 func (s *sphere) random(o Vec3, rnd *rand.Rand) Vec3 {
-	return Vec3{1, 0, 0}
+	direction := s.center.Sub(o)
+	distanceSquared := direction.LengthSquared()
+	uvw := buildFromW(direction)
+	return uvw.local(RandomToSphere(s.radius, distanceSquared, rnd))
 }
 
 func (s *sphere) getSphereUV(p Point3) (u float64, v float64) {
@@ -245,11 +256,19 @@ func (list *hittableList) boundingBox(time0 float64, time1 float64) (outputBox a
 }
 
 func (list *hittableList) pdfValue(o Point3, v Vec3) float64 {
-	return 0
+
+	weight := 1.0 / float64(len(list.objects))
+	sum := 0.0
+
+	for _, obj := range list.objects {
+		sum += weight * obj.pdfValue(o, v)
+	}
+
+	return sum
 }
 
 func (list *hittableList) random(o Vec3, rnd *rand.Rand) Vec3 {
-	return Vec3{1, 0, 0}
+	return list.objects[rand.Intn(len(list.objects))].random(o, rnd)
 }
 
 type bvhNode struct {

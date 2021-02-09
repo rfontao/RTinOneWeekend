@@ -41,7 +41,9 @@ func main() {
 	vfov := 40.0
 	aperture := 0.0
 
-	var lights hittable = &xzRect{lambertian{}, 213, 343, 227, 332, 554}
+	var lights hittableList
+	lights.Add(&xzRect{lambertian{}, 213, 343, 227, 332, 554})
+	lights.Add(&sphere{Point3{190, 90, 190}, 90, metal{}})
 
 	switch 6 {
 	case 1:
@@ -154,7 +156,7 @@ func main() {
 				ch := make(chan Color3, opts.samplesPerPixel)
 
 				pixelColor := Color3{0, 0, 0}
-				sendRays(world, &c, x, row, &opts, ch, lights)
+				sendRays(world, &c, x, row, &opts, ch, &lights)
 
 				for i := 0; i < opts.samplesPerPixel; i++ {
 					pixelColor = pixelColor.Add(<-ch)
