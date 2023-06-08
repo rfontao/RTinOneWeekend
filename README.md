@@ -1,7 +1,14 @@
 # Raytracing in One Weekend
 
-Implentation of [these three books](https://raytracing.github.io/) in Go.
+![Random scene example](images/random_500_40.png)
+![Normal Cornell scene example](images/cornell_normal_2000_5.png)
+![Normal Cornell scene example](images/cornell_2500_50.png)
 
-## Known issues
+A Go implementation of the [Raytracing in One Weekend](https://raytracing.github.io/) book series.
 
-* The *fog* in the final scene of the second book produces a black picture 
+Features:
+- Multihreading with goroutines
+- PNG image support
+- Texturing
+- Usage of BVH acceleration structure
+- Diffuse, metal and dielectric materials
