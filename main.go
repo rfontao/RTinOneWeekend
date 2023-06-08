@@ -8,6 +8,8 @@ import (
 	"os"
 	"sync"
 	"time"
+
+	"github.com/schollz/progressbar/v3"
 )
 
 type options struct {
@@ -30,8 +32,8 @@ func main() {
 		aspectRatio:     aspectRatio,
 		imageWidth:      imageWidth,
 		imageHeight:     imageHeight,
-		samplesPerPixel: 50,
-		maxDepth:        40,
+		samplesPerPixel: 500,
+		maxDepth:        5,
 		background:      Color3{0, 0, 0},
 	}
 
@@ -95,8 +97,10 @@ func main() {
 		opts.aspectRatio = 1.0
 		opts.imageWidth = 600
 		opts.imageHeight = int(float64(opts.imageWidth) / opts.aspectRatio)
-		opts.samplesPerPixel = 100
-		opts.maxDepth = 50
+		// opts.samplesPerPixel = 2500
+		opts.samplesPerPixel = 2000
+		// opts.maxDepth = 50
+		opts.maxDepth = 5
 		opts.background = Color3{0, 0, 0}
 
 		//Camera
@@ -122,7 +126,8 @@ func main() {
 		opts.aspectRatio = 1.0
 		opts.imageWidth = 800
 		opts.imageHeight = int(float64(opts.imageWidth) / opts.aspectRatio)
-		opts.samplesPerPixel = 300
+		opts.samplesPerPixel = 100
+		opts.maxDepth = 3
 		opts.background = Color3{0, 0, 0}
 
 		//Camera
@@ -150,8 +155,12 @@ func main() {
 	wg := sync.WaitGroup{}
 	for y := opts.imageHeight - 1; y >= 0; y-- {
 		//Draw each pixel of line
+		wg.Add(1)
 		go func(row int) {
-			wg.Add(1)
+			var bar *progressbar.ProgressBar
+			if row == 0 {
+				bar = progressbar.Default(int64(opts.imageWidth))
+			}
 			for x := 0; x < opts.imageWidth; x++ {
 				ch := make(chan Color3, opts.samplesPerPixel)
 
@@ -163,6 +172,9 @@ func main() {
 				}
 				// Colors are defined by Red, Green, Blue, Alpha uint8 values.
 				img.Set(x, opts.imageHeight-row, Color3ToRGBA(pixelColor, opts.samplesPerPixel))
+				if row == 0 {
+					bar.Add(1)
+				}
 			}
 			//Maybe change later
 			fmt.Printf("%d/%d lines\n", opts.imageHeight-row, opts.imageHeight)
@@ -180,9 +192,9 @@ func main() {
 }
 
 func sendRays(world hittable, c *camera, x int, y int, opts *options, ch chan Color3, lights hittable) {
-
-	for s := 0; s < opts.samplesPerPixel; s++ {
-		go func() {
+	go func() {
+		for s := 0; s < opts.samplesPerPixel; s++ {
+			// go func() {
 			rnd := rand.New(rand.NewSource(rand.Int63()))
 
 			//Horizontal ratio?
@@ -194,6 +206,7 @@ func sendRays(world hittable, c *camera, x int, y int, opts *options, ch chan Co
 			rayColor := currentRay.RayColor(world, opts.background, opts.maxDepth, rnd, lights)
 			// pixelColor = pixelColor.Add(rayColor)
 			ch <- rayColor
-		}()
-	}
+			// }()
+		}
+	}()
 }

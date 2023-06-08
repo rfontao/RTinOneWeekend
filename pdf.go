@@ -57,3 +57,17 @@ func (pdf mixturePdf) generate(rnd *rand.Rand) Vec3 {
 	}
 	return pdf.p[1].generate(rnd)
 }
+
+type spherePdf struct{}
+
+func newSpherePdf() spherePdf {
+	return spherePdf{}
+}
+
+func (pdf spherePdf) value(direction Vec3) float64 {
+	return 1.0 / (4.0 * math.Pi)
+}
+
+func (pdf spherePdf) generate(rnd *rand.Rand) Vec3 {
+	return RandomUnitVector(rnd)
+}

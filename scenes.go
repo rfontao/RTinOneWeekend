@@ -198,6 +198,7 @@ func cornellBox() hittable {
 	world.Add(&xyRect{white, 0, 555, 0, 555, 555})
 
 	// aluminum := metal{Color3{0.8, 0.85, 0.88}, 0.0}
+	// var box1 hittable = newBox(Point3{0, 0, 0}, Point3{165, 330, 165}, aluminum)
 	var box1 hittable = newBox(Point3{0, 0, 0}, Point3{165, 330, 165}, white)
 	box1 = newRotateY(box1, 15)
 	box1 = &translate{box1, Vec3{265, 0, 295}}
@@ -233,12 +234,12 @@ func cornellSmoke() hittable {
 	box1 = newRotateY(box1, 15)
 	box1 = &translate{box1, Vec3{265, 0, 295}}
 
-	var box2 hittable = newBox(Point3{0, 0, 0}, Point3{165, 165, 165}, white)
-	box2 = newRotateY(box2, -18)
-	box2 = &translate{box2, Vec3{130, 0, 65}}
+	// var box2 hittable = newBox(Point3{0, 0, 0}, Point3{165, 165, 165}, white)
+	// box2 = newRotateY(box2, -18)
+	// box2 = &translate{box2, Vec3{130, 0, 65}}
 
 	world.Add(newConstantMedium(box1, 0.01, solidColor{Color3{0, 0, 0}}))
-	world.Add(newConstantMedium(box2, 0.01, solidColor{Color3{1, 1, 1}}))
+	// world.Add(newConstantMedium(box2, 0.01, solidColor{Color3{1, 1, 1}}))
 
 	return newBvhNode(world.objects, 0.0, 1.0)
 }
@@ -276,29 +277,29 @@ func finalScene() hittable {
 	objects.Add(&sphere{Point3{260, 150, 45}, 50, dielectric{1.5}})
 	objects.Add(&sphere{Point3{0, 150, 145}, 50, metal{Color3{0.8, 0.8, 0.9}, 1.0}})
 
-	boundary := sphere{Point3{360, 150, 145}, 70, dielectric{1.5}}
-	objects.Add(&boundary)
-	objects.Add(newConstantMedium(&boundary, 0.2, solidColor{Color3{0.2, 0.4, 0.9}}))
-	boundary = sphere{Point3{0, 0, 0}, 5000, dielectric{1.5}}
-	objects.Add(newConstantMedium(&boundary, 1000, solidColor{Color3{1, 1, 1}}))
+	// boundary := sphere{Point3{360, 150, 145}, 70, dielectric{1.5}}
+	// objects.Add(&boundary)
+	// objects.Add(newConstantMedium(&boundary, 0.2, solidColor{Color3{0.2, 0.4, 0.9}}))
+	// boundary = sphere{Point3{0, 0, 0}, 5000, dielectric{1.5}}
+	// objects.Add(newConstantMedium(&boundary, 1000, solidColor{Color3{1, 1, 1}}))
 
 	emat := lambertian{newImageTexture("earthmap.jpg")}
 	objects.Add(&sphere{Point3{400, 200, 400}, 100, emat})
 	pertext := noiseTexture{newPerlin(), 0.1}
 	objects.Add(&sphere{Point3{220, 280, 300}, 80, lambertian{pertext}})
 
-	var boxes2 hittableList
-	white := lambertian{solidColor{Color3{0.73, 0.73, 0.73}}}
-	ns := 1000
-	for j := 0; j < ns; j++ {
-		boxes2.Add(&sphere{Point3{rand.Float64() * 165, rand.Float64() * 165, rand.Float64() * 165}, 10, white})
-	}
+	// var boxes2 hittableList
+	// white := lambertian{solidColor{Color3{0.73, 0.73, 0.73}}}
+	// ns := 20
+	// for j := 0; j < ns; j++ {
+	// 	boxes2.Add(&sphere{Point3{rand.Float64() * 165, rand.Float64() * 165, rand.Float64() * 165}, 10, white})
+	// }
 
-	objects.Add(&translate{
-		newRotateY(
-			newBvhNode(boxes2.objects, 0, 1), 15),
-		Vec3{-100, 270, 395},
-	})
+	// objects.Add(&translate{
+	// 	newRotateY(
+	// 		newBvhNode(boxes2.objects, 0, 1), 15),
+	// 	Vec3{-100, 270, 395},
+	// })
 
 	return newBvhNode(objects.objects, 0, 1)
 }

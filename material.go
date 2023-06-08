@@ -143,10 +143,11 @@ type isotropic struct {
 }
 
 func (m isotropic) scatter(rayIn *ray, rec *hitRecord, rnd *rand.Rand) (sRec *scatterRecord, scatter bool) {
-	// s := ray{rec.p, RandomInUnitSphere(rnd), rayIn.time}
-	// a := m.albedo.value(rec.u, rec.v, rec.p)
-	// return &s, &a, 0, true
-	return nil, true
+	var sRecord scatterRecord
+	sRecord.isSpecular = false
+	sRecord.pdf = newSpherePdf()
+	sRecord.attenuation = m.albedo.value(rec.u, rec.v, rec.p)
+	return &sRecord, true
 }
 
 func (m isotropic) emitted(rayIn *ray, rec *hitRecord, u float64, v float64, p Point3) Color3 {
@@ -154,5 +155,5 @@ func (m isotropic) emitted(rayIn *ray, rec *hitRecord, u float64, v float64, p P
 }
 
 func (m isotropic) scatteringPdf(rayIn *ray, rec *hitRecord, scattered *ray) float64 {
-	return 0
+	return 1.0 / (4.0 * math.Pi)
 }
